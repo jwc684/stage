@@ -1,32 +1,19 @@
-import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
-import {
-  ACCEPTED_IMAGE_TYPES,
-  MAX_FILE_SIZE,
-  UPLOAD_DIR,
-  BLOG_UPLOAD_DIR,
-} from "./constants";
+import { ACCEPTED_IMAGE_TYPES } from "./constants";
+import { supabase, STORAGE_BUCKET, getPublicUrl } from "./supabase";
 
 function validateImageType(file: File) {
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-    throw new Error(`Invalid file type: ${file.type}`);
+    throw new Error(`지원하지 않는 파일 형식입니다: ${file.type}`);
   }
 }
 
-async function writeFileToDir(file: File, uploadDir: string): Promise<string> {
-  await mkdir(uploadDir, { recursive: true });
-
+function generateFilename(file: File): string {
   const timestamp = Date.now();
   const ext = path.extname(file.name) || ".jpg";
   const baseName = path.basename(file.name, ext);
   const safeName = baseName.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const filename = `${timestamp}-${safeName}${ext}`;
-  const filePath = path.join(uploadDir, filename);
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(filePath, buffer);
-
-  return filename;
+  return `${timestamp}-${safeName}${ext}`;
 }
 
 export async function saveUploadedFile(
@@ -35,42 +22,48 @@ export async function saveUploadedFile(
 ): Promise<string> {
   validateImageType(file);
 
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error(`File too large: ${file.size} bytes`);
-  }
+  const filename = generateFilename(file);
+  const storagePath = `magazines/${magazineId}/pages/${filename}`;
 
-  const uploadDir = path.join(
-    process.cwd(),
-    "public",
-    UPLOAD_DIR,
-    magazineId,
-    "pages"
-  );
-  const filename = await writeFileToDir(file, uploadDir);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .upload(storagePath, buffer, {
+      contentType: file.type,
+    });
 
-  return `/${UPLOAD_DIR}/${magazineId}/pages/${filename}`;
+  if (error) throw new Error(`업로드 실패: ${error.message}`);
+
+  return getPublicUrl(storagePath);
 }
 
 export async function saveBlogThumbnail(file: File): Promise<string> {
   validateImageType(file);
 
-  const uploadDir = path.join(process.cwd(), "public", BLOG_UPLOAD_DIR);
-  const filename = await writeFileToDir(file, uploadDir);
+  const filename = generateFilename(file);
+  const storagePath = `blog/${filename}`;
 
-  return `/${BLOG_UPLOAD_DIR}/${filename}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .upload(storagePath, buffer, {
+      contentType: file.type,
+    });
+
+  if (error) throw new Error(`업로드 실패: ${error.message}`);
+
+  return getPublicUrl(storagePath);
 }
 
 export async function deleteUploadedFile(imageUrl: string): Promise<void> {
   try {
-    const filePath = path.resolve(process.cwd(), "public", imageUrl);
-    const uploadsRoot = path.resolve(process.cwd(), "public", "uploads");
+    const url = new URL(imageUrl);
+    const pathParts = url.pathname.split(`/storage/v1/object/public/${STORAGE_BUCKET}/`);
+    if (pathParts.length < 2) return;
 
-    if (!filePath.startsWith(uploadsRoot)) {
-      throw new Error("Invalid file path");
-    }
-
-    await unlink(filePath);
+    const storagePath = decodeURIComponent(pathParts[1]);
+    await supabase.storage.from(STORAGE_BUCKET).remove([storagePath]);
   } catch {
-    // File may not exist or path invalid, ignore
+    // URL parsing failed or file not found, ignore
   }
 }
