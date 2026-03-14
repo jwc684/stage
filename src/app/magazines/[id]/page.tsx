@@ -52,6 +52,21 @@ export default async function MagazineViewerPage({ params }: Props) {
       <div className="flex-1 overflow-hidden">
         <MagazineViewer pages={magazine.pages} />
       </div>
+      <div className="flex-shrink-0 flex items-center justify-center gap-4 border-t border-white/10 py-3 px-4">
+        <Link
+          href="/"
+          className="text-sm text-gray-400 transition-colors hover:text-white"
+        >
+          &larr; 메인으로
+        </Link>
+        <span className="text-gray-700">|</span>
+        <Link
+          href="/magazines"
+          className="text-sm text-gray-400 transition-colors hover:text-white"
+        >
+          매거진 목록
+        </Link>
+      </div>
     </div>
   );
 }
