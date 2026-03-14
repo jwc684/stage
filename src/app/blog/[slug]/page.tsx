@@ -8,6 +8,7 @@ import sanitizeHtml from "sanitize-html";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Footer } from "@/components/public/footer";
+import { ViewTracker } from "@/components/public/view-tracker";
 import type { Metadata } from "next";
 
 const getPost = cache(async (slug: string) => {
@@ -52,6 +53,7 @@ export default async function BlogPostPage({
 
   return (
     <div className="min-h-screen bg-white">
+      <ViewTracker type="blog" id={post.id} />
       <header className="sticky top-0 z-10 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
           <Link href="/" className="text-lg font-bold tracking-tight">

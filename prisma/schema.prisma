@@ -21,6 +21,7 @@ model Magazine {
   coverImageUrl String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  viewCount     Int            @default(0)
   publishedAt   DateTime?
   pages         MagazinePage[]
 
@@ -53,6 +54,7 @@ model BlogPost {
   thumbnailUrl String?
   author       String         @default("")
   tags         String[]
+  viewCount    Int            @default(0)
   status       BlogPostStatus @default(draft)
   publishedAt  DateTime?
   createdAt    DateTime       @default(now())

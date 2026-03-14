@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { MagazineViewer } from "@/components/public/magazine-viewer";
+import { ViewTracker } from "@/components/public/view-tracker";
 import type { Metadata } from "next";
 
 type Props = {
@@ -38,6 +39,7 @@ export default async function MagazineViewerPage({ params }: Props) {
 
   return (
     <div className="flex h-screen flex-col bg-gray-950">
+      <ViewTracker type="magazine" id={magazine.id} />
       <header className="flex h-12 flex-shrink-0 items-center justify-between px-4">
         <Link
           href="/"

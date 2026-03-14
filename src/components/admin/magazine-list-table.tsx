@@ -47,7 +47,8 @@ export function MagazineListTable({
               <TableHead>제목</TableHead>
               <TableHead className="w-24">상태</TableHead>
               <TableHead className="w-20">페이지</TableHead>
-              <TableHead className="w-36">수정일</TableHead>
+              <TableHead className="w-28">발행일</TableHead>
+              <TableHead className="w-20">조회수</TableHead>
               <TableHead className="w-20"></TableHead>
             </TableRow>
           </TableHeader>
@@ -80,7 +81,12 @@ export function MagazineListTable({
                 </TableCell>
                 <TableCell>{mag._count.pages}</TableCell>
                 <TableCell className="text-sm text-gray-500">
-                  {new Date(mag.updatedAt).toLocaleDateString("ko-KR")}
+                  {mag.publishedAt
+                    ? new Date(mag.publishedAt).toLocaleDateString("ko-KR")
+                    : "-"}
+                </TableCell>
+                <TableCell className="text-sm text-gray-500">
+                  {mag.viewCount.toLocaleString()}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -144,6 +150,9 @@ export function MagazineListTable({
                 <StatusBadge status={mag.status} />
                 <span className="text-xs text-gray-400">
                   {mag._count.pages}p
+                </span>
+                <span className="text-xs text-gray-400">
+                  {mag.viewCount.toLocaleString()}회
                 </span>
               </div>
             </div>

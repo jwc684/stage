@@ -42,7 +42,8 @@ export function BlogListTable({ posts }: { posts: BlogPost[] }) {
               <TableHead>제목</TableHead>
               <TableHead className="w-24">작성자</TableHead>
               <TableHead className="w-24">상태</TableHead>
-              <TableHead className="w-36">수정일</TableHead>
+              <TableHead className="w-28">작성일</TableHead>
+              <TableHead className="w-20">조회수</TableHead>
               <TableHead className="w-20"></TableHead>
             </TableRow>
           </TableHeader>
@@ -74,7 +75,12 @@ export function BlogListTable({ posts }: { posts: BlogPost[] }) {
                   <StatusBadge status={post.status} />
                 </TableCell>
                 <TableCell className="text-sm text-gray-500">
-                  {new Date(post.updatedAt).toLocaleDateString("ko-KR")}
+                  {post.publishedAt
+                    ? new Date(post.publishedAt).toLocaleDateString("ko-KR")
+                    : "-"}
+                </TableCell>
+                <TableCell className="text-sm text-gray-500">
+                  {post.viewCount.toLocaleString()}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -135,6 +141,9 @@ export function BlogListTable({ posts }: { posts: BlogPost[] }) {
                 {post.author && (
                   <span className="text-xs text-gray-400">{post.author}</span>
                 )}
+                <span className="text-xs text-gray-400">
+                  {post.viewCount.toLocaleString()}회
+                </span>
               </div>
             </div>
           </Link>
