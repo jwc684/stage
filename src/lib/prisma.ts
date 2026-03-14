@@ -6,10 +6,13 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL!,
-    max: 5,
-  });
+  const adapter = new PrismaPg(
+    {
+      connectionString: process.env.DATABASE_URL!,
+      max: 3,
+    },
+    { schema: "public" }
+  );
   return new PrismaClient({ adapter });
 }
 
