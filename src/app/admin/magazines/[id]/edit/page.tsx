@@ -47,6 +47,7 @@ export default async function EditMagazinePage({
           defaultValues={{
             issueNumber: magazine.issueNumber,
             title: magazine.title,
+            publishedAt: magazine.publishedAt,
           }}
           formId="magazine-edit-form"
         />

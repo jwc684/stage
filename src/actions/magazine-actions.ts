@@ -8,12 +8,14 @@ import { z } from "zod/v4";
 const magazineSchema = z.object({
   issueNumber: z.coerce.number().int().positive("호수는 양수여야 합니다"),
   title: z.string().min(1, "제목을 입력해주세요").max(200),
+  publishedAt: z.string().optional().default(""),
 });
 
 export async function createMagazine(formData: FormData) {
   const parsed = magazineSchema.safeParse({
     issueNumber: formData.get("issueNumber"),
     title: formData.get("title"),
+    publishedAt: formData.get("publishedAt"),
   });
 
   if (!parsed.success) {
@@ -29,7 +31,13 @@ export async function createMagazine(formData: FormData) {
   }
 
   const magazine = await prisma.magazine.create({
-    data: parsed.data,
+    data: {
+      issueNumber: parsed.data.issueNumber,
+      title: parsed.data.title,
+      publishedAt: parsed.data.publishedAt
+        ? new Date(parsed.data.publishedAt)
+        : null,
+    },
   });
 
   redirect(`/admin/magazines/${magazine.id}/edit`);
@@ -39,6 +47,7 @@ export async function updateMagazine(id: string, formData: FormData) {
   const parsed = magazineSchema.safeParse({
     issueNumber: formData.get("issueNumber"),
     title: formData.get("title"),
+    publishedAt: formData.get("publishedAt"),
   });
 
   if (!parsed.success) {
@@ -58,11 +67,18 @@ export async function updateMagazine(id: string, formData: FormData) {
 
   await prisma.magazine.update({
     where: { id },
-    data: parsed.data,
+    data: {
+      issueNumber: parsed.data.issueNumber,
+      title: parsed.data.title,
+      publishedAt: parsed.data.publishedAt
+        ? new Date(parsed.data.publishedAt)
+        : null,
+    },
   });
 
   revalidatePath(`/admin/magazines/${id}/edit`);
   revalidatePath("/admin/magazines");
+  revalidatePath("/");
   return { success: true };
 }
 
@@ -84,7 +100,7 @@ export async function publishMagazine(id: string) {
     where: { id },
     data: {
       status: "published",
-      publishedAt: new Date(),
+      publishedAt: magazine.publishedAt ?? new Date(),
     },
   });
 

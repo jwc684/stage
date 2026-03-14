@@ -16,7 +16,7 @@ export function MagazineForm({
   formId,
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
-  defaultValues?: { issueNumber?: number; title?: string };
+  defaultValues?: { issueNumber?: number; title?: string; publishedAt?: Date | null };
   submitLabel?: string;
   formId?: string;
 }) {
@@ -54,6 +54,24 @@ export function MagazineForm({
               defaultValue={defaultValues?.title}
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="publishedAt">발행날짜</Label>
+            <Input
+              id="publishedAt"
+              name="publishedAt"
+              type="date"
+              defaultValue={
+                defaultValues?.publishedAt
+                  ? new Date(defaultValues.publishedAt)
+                      .toISOString()
+                      .split("T")[0]
+                  : ""
+              }
+            />
+            <p className="text-xs text-gray-500">
+              비워두면 발행 시 현재 날짜가 사용됩니다
+            </p>
           </div>
           {state?.error && (
             <p className="text-sm text-red-600">{state.error}</p>
