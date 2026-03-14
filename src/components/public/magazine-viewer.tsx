@@ -178,7 +178,13 @@ function MobilePrevFlipOverlay({
 }
 
 // ── Unified viewer ──
-export function MagazineViewer({ pages }: { pages: MagazinePage[] }) {
+export function MagazineViewer({
+  pages,
+  magazineId,
+}: {
+  pages: MagazinePage[];
+  magazineId?: string;
+}) {
   const HTMLFlipBook = useFlipBook();
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -262,9 +268,27 @@ export function MagazineViewer({ pages }: { pages: MagazinePage[] }) {
     };
   }, [pages]);
 
-  const onFlip = useCallback((e: { data: number }) => {
-    setCurrentPage(e.data);
-  }, []);
+  const viewTrackedRef = useRef(false);
+
+  const onFlip = useCallback(
+    (e: { data: number }) => {
+      setCurrentPage(e.data);
+
+      if (!viewTrackedRef.current && magazineId) {
+        const key = `viewed:magazine:${magazineId}`;
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, "1");
+          fetch("/api/views", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "magazine", id: magazineId }),
+          });
+        }
+        viewTrackedRef.current = true;
+      }
+    },
+    [magazineId]
+  );
 
   const onChangeOrientation = useCallback(
     (e: { data: string }) => {

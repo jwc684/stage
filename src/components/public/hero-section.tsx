@@ -34,7 +34,7 @@ export function HeroSection({ magazine }: { magazine: MagazineWithPages }) {
       {/* Magazine viewer */}
       <div className="min-h-0 flex-1">
         {hasPages ? (
-          <MagazineViewer pages={magazine.pages} />
+          <MagazineViewer pages={magazine.pages} magazineId={magazine.id} />
         ) : (
           <div className="flex h-full items-center justify-center text-gray-500">
             No pages available
