@@ -37,7 +37,7 @@ const FlipPage = forwardRef<
         src={page.imageUrl}
         alt={`Page ${page.pageNumber}`}
         fill
-        className="object-cover"
+        className="object-contain"
         sizes="(min-width: 768px) 50vw, 100vw"
         priority={page.pageNumber <= 2}
         draggable={false}
@@ -135,7 +135,7 @@ function MobilePrevFlipOverlay({
           src={currentPage.imageUrl}
           alt={`Page ${currentPage.pageNumber}`}
           fill
-          className="object-cover"
+          className="object-contain"
           sizes="100vw"
           draggable={false}
         />
@@ -155,7 +155,7 @@ function MobilePrevFlipOverlay({
           src={prevPage.imageUrl}
           alt={`Page ${prevPage.pageNumber}`}
           fill
-          className="object-cover"
+          className="object-contain"
           sizes="100vw"
           draggable={false}
         />
