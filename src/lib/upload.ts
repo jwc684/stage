@@ -1,6 +1,6 @@
 import path from "path";
 import { ACCEPTED_IMAGE_TYPES } from "./constants";
-import { supabase, STORAGE_BUCKET, getPublicUrl } from "./supabase";
+import { getSupabase, STORAGE_BUCKET, getPublicUrl } from "./supabase";
 
 function validateImageType(file: File) {
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
@@ -26,7 +26,7 @@ export async function saveUploadedFile(
   const storagePath = `magazines/${magazineId}/pages/${filename}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const { error } = await supabase.storage
+  const { error } = await getSupabase().storage
     .from(STORAGE_BUCKET)
     .upload(storagePath, buffer, {
       contentType: file.type,
@@ -44,7 +44,7 @@ export async function saveBlogThumbnail(file: File): Promise<string> {
   const storagePath = `blog/${filename}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const { error } = await supabase.storage
+  const { error } = await getSupabase().storage
     .from(STORAGE_BUCKET)
     .upload(storagePath, buffer, {
       contentType: file.type,
@@ -62,7 +62,7 @@ export async function deleteUploadedFile(imageUrl: string): Promise<void> {
     if (pathParts.length < 2) return;
 
     const storagePath = decodeURIComponent(pathParts[1]);
-    await supabase.storage.from(STORAGE_BUCKET).remove([storagePath]);
+    await getSupabase().storage.from(STORAGE_BUCKET).remove([storagePath]);
   } catch {
     // URL parsing failed or file not found, ignore
   }
