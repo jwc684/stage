@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MagazineStatus {
+  draft
+  published
+  unpublished
+}
+
+model Magazine {
+  id            String         @id @default(cuid())
+  issueNumber   Int            @unique
+  title         String
+  status        MagazineStatus @default(draft)
+  coverImageUrl String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  publishedAt   DateTime?
+  pages         MagazinePage[]
+
+  @@index([status, publishedAt(sort: Desc)])
+}
+
+model MagazinePage {
+  id         String   @id @default(cuid())
+  magazineId String
+  pageNumber Int
+  imageUrl   String
+  sortOrder  Int
+  createdAt  DateTime @default(now())
+  magazine   Magazine @relation(fields: [magazineId], references: [id], onDelete: Cascade)
+
+  @@unique([magazineId, sortOrder])
+  @@index([magazineId, sortOrder])
+}
+
+enum BlogPostStatus {
+  draft
+  published
+}
+
+model BlogPost {
+  id           String         @id @default(cuid())
+  title        String
+  slug         String         @unique
+  content      String         @default("") @db.Text
+  thumbnailUrl String?
+  author       String         @default("")
+  tags         String[]
+  status       BlogPostStatus @default(draft)
+  publishedAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([status, publishedAt(sort: Desc)])
+}

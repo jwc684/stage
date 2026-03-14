@@ -1,0 +1,50 @@
+import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "STAGE Admin",
+};
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="border-b bg-white">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
+          <div className="flex items-center gap-6">
+            <Link
+              href="/admin/magazines"
+              className="text-lg font-bold tracking-tight"
+            >
+              STAGE Admin
+            </Link>
+            <nav className="flex items-center gap-4">
+              <Link
+                href="/admin/magazines"
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                매거진
+              </Link>
+              <Link
+                href="/admin/blog"
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                블로그
+              </Link>
+            </nav>
+          </div>
+          <Link
+            href="/"
+            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            사이트 보기
+          </Link>
+        </div>
+      </header>
+      <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
+    </div>
+  );
+}

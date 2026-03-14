@@ -1,0 +1,117 @@
+"use server";
+
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod/v4";
+
+const magazineSchema = z.object({
+  issueNumber: z.coerce.number().int().positive("호수는 양수여야 합니다"),
+  title: z.string().min(1, "제목을 입력해주세요").max(200),
+});
+
+export async function createMagazine(formData: FormData) {
+  const parsed = magazineSchema.safeParse({
+    issueNumber: formData.get("issueNumber"),
+    title: formData.get("title"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+
+  const existing = await prisma.magazine.findUnique({
+    where: { issueNumber: parsed.data.issueNumber },
+  });
+
+  if (existing) {
+    return { error: `호수 ${parsed.data.issueNumber}은(는) 이미 존재합니다` };
+  }
+
+  const magazine = await prisma.magazine.create({
+    data: parsed.data,
+  });
+
+  redirect(`/admin/magazines/${magazine.id}/edit`);
+}
+
+export async function updateMagazine(id: string, formData: FormData) {
+  const parsed = magazineSchema.safeParse({
+    issueNumber: formData.get("issueNumber"),
+    title: formData.get("title"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+
+  const existing = await prisma.magazine.findFirst({
+    where: {
+      issueNumber: parsed.data.issueNumber,
+      NOT: { id },
+    },
+  });
+
+  if (existing) {
+    return { error: `호수 ${parsed.data.issueNumber}은(는) 이미 존재합니다` };
+  }
+
+  await prisma.magazine.update({
+    where: { id },
+    data: parsed.data,
+  });
+
+  revalidatePath(`/admin/magazines/${id}/edit`);
+  revalidatePath("/admin/magazines");
+  return { success: true };
+}
+
+export async function publishMagazine(id: string) {
+  const magazine = await prisma.magazine.findUnique({
+    where: { id },
+    include: { _count: { select: { pages: true } } },
+  });
+
+  if (!magazine) {
+    return { error: "매거진을 찾을 수 없습니다" };
+  }
+
+  if (magazine._count.pages === 0) {
+    return { error: "최소 1장의 페이지가 필요합니다" };
+  }
+
+  await prisma.magazine.update({
+    where: { id },
+    data: {
+      status: "published",
+      publishedAt: new Date(),
+    },
+  });
+
+  revalidatePath(`/admin/magazines/${id}/edit`);
+  revalidatePath("/admin/magazines");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function unpublishMagazine(id: string) {
+  await prisma.magazine.update({
+    where: { id },
+    data: { status: "unpublished" },
+  });
+
+  revalidatePath(`/admin/magazines/${id}/edit`);
+  revalidatePath("/admin/magazines");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function deleteMagazine(id: string) {
+  await prisma.magazine.delete({
+    where: { id },
+  });
+
+  revalidatePath("/admin/magazines");
+  revalidatePath("/");
+  redirect("/admin/magazines");
+}

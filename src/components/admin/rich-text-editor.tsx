@@ -1,0 +1,330 @@
+"use client";
+
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import TiptapLink from "@tiptap/extension-link";
+import TiptapImage from "@tiptap/extension-image";
+import Placeholder from "@tiptap/extension-placeholder";
+import { useCallback, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { ACCEPTED_IMAGE_TYPES } from "@/lib/constants";
+
+async function uploadImage(file: File): Promise<string> {
+  if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+    throw new Error("지원하지 않는 파일 형식입니다");
+  }
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch("/api/admin/blog/upload", {
+    method: "POST",
+    body: formData,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "업로드 실패");
+  return data.url;
+}
+
+function ToolbarButton({
+  onClick,
+  active,
+  children,
+}: {
+  onClick: () => void;
+  active?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded px-2 py-1 text-sm font-medium transition-colors ${
+        active
+          ? "bg-gray-900 text-white"
+          : "bg-white text-gray-600 hover:bg-gray-100"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ImageInsertDialog({
+  open,
+  onClose,
+  onInsert,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onInsert: (url: string) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+
+  async function handleFile(file: File) {
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      onInsert(url);
+      setUrlInput("");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "업로드 실패");
+    }
+    setUploading(false);
+  }
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: (files) => {
+      if (files[0]) handleFile(files[0]);
+    },
+    accept: Object.fromEntries(ACCEPTED_IMAGE_TYPES.map((t) => [t, []])),
+    maxFiles: 1,
+    disabled: uploading,
+  });
+
+  function handleUrlSubmit() {
+    if (urlInput.trim()) {
+      onInsert(urlInput.trim());
+      setUrlInput("");
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>이미지 삽입</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Upload area */}
+          <div>
+            <Label className="mb-2 block text-sm font-medium">
+              파일 업로드
+            </Label>
+            <div
+              {...getRootProps()}
+              className={`cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+                isDragActive
+                  ? "border-gray-900 bg-gray-50"
+                  : "border-gray-300 hover:border-gray-400"
+              } ${uploading ? "pointer-events-none opacity-60" : ""}`}
+            >
+              <input {...getInputProps()} />
+              {uploading ? (
+                <p className="text-sm text-gray-500">업로드 중...</p>
+              ) : (
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-500">
+                    클릭하거나 이미지를 드래그하세요
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    JPG, PNG, WebP
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-3 text-xs text-gray-400">또는</span>
+            </div>
+          </div>
+
+          {/* URL input */}
+          <div>
+            <Label htmlFor="image-url" className="mb-2 block text-sm font-medium">
+              URL 직접 입력
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="image-url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+                onKeyDown={(e) => e.key === "Enter" && handleUrlSubmit()}
+              />
+              <Button
+                type="button"
+                onClick={handleUrlSubmit}
+                disabled={!urlInput.trim()}
+                size="sm"
+              >
+                삽입
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function RichTextEditor({
+  content,
+  onChange,
+}: {
+  content: string;
+  onChange: (html: string) => void;
+}) {
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      TiptapLink.configure({ openOnClick: false }),
+      TiptapImage,
+      Placeholder.configure({ placeholder: "블로그 내용을 입력하세요..." }),
+    ],
+    content,
+    immediatelyRender: false,
+    editorProps: {
+      handleDrop: (_view, event, _slice, moved) => {
+        if (moved || !event.dataTransfer?.files.length) return false;
+        const file = event.dataTransfer.files[0];
+        if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return false;
+        event.preventDefault();
+        const toastId = toast.loading("이미지 업로드 중...");
+        uploadImage(file)
+          .then((url) => {
+            editor?.chain().focus().setImage({ src: url }).run();
+            toast.success("이미지가 삽입되었습니다", { id: toastId });
+          })
+          .catch((e) => {
+            toast.error(e instanceof Error ? e.message : "업로드 실패", {
+              id: toastId,
+            });
+          });
+        return true;
+      },
+      handlePaste: (_view, event) => {
+        const files = Array.from(event.clipboardData?.files || []);
+        const imageFile = files.find((f) =>
+          ACCEPTED_IMAGE_TYPES.includes(f.type)
+        );
+        if (!imageFile) return false;
+        event.preventDefault();
+        const toastId = toast.loading("이미지 업로드 중...");
+        uploadImage(imageFile)
+          .then((url) => {
+            editor?.chain().focus().setImage({ src: url }).run();
+            toast.success("이미지가 삽입되었습니다", { id: toastId });
+          })
+          .catch((e) => {
+            toast.error(e instanceof Error ? e.message : "업로드 실패", {
+              id: toastId,
+            });
+          });
+        return true;
+      },
+    },
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
+    },
+  });
+
+  const addLink = useCallback(() => {
+    if (!editor) return;
+    const url = window.prompt("URL을 입력하세요");
+    if (url) {
+      editor.chain().focus().setLink({ href: url }).run();
+    }
+  }, [editor]);
+
+  const handleImageInsert = useCallback(
+    (url: string) => {
+      if (editor) {
+        editor.chain().focus().setImage({ src: url }).run();
+      }
+      setImageDialogOpen(false);
+    },
+    [editor]
+  );
+
+  if (!editor) return null;
+
+  return (
+    <>
+      <div className="overflow-hidden rounded-lg border">
+        <div className="flex flex-wrap gap-1 border-b bg-gray-50 p-2">
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            active={editor.isActive("bold")}
+          >
+            B
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            active={editor.isActive("italic")}
+          >
+            I
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            }
+            active={editor.isActive("heading", { level: 2 })}
+          >
+            H2
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+            }
+            active={editor.isActive("heading", { level: 3 })}
+          >
+            H3
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            active={editor.isActive("bulletList")}
+          >
+            List
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            active={editor.isActive("orderedList")}
+          >
+            1.
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            active={editor.isActive("blockquote")}
+          >
+            Quote
+          </ToolbarButton>
+          <ToolbarButton onClick={addLink} active={editor.isActive("link")}>
+            Link
+          </ToolbarButton>
+          <ToolbarButton onClick={() => setImageDialogOpen(true)}>
+            Image
+          </ToolbarButton>
+        </div>
+        <EditorContent
+          editor={editor}
+          className="prose max-w-none p-4 [&_.ProseMirror]:min-h-[300px] [&_.ProseMirror]:outline-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-gray-400 [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0"
+        />
+      </div>
+
+      <ImageInsertDialog
+        open={imageDialogOpen}
+        onClose={() => setImageDialogOpen(false)}
+        onInsert={handleImageInsert}
+      />
+    </>
+  );
+}
