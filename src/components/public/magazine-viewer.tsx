@@ -36,6 +36,7 @@ function usePinchZoom(
   } | null>(null);
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
   const didMoveRef = useRef(false);
+  const wasPinchingRef = useRef(false);
   const onSingleTapRef = useRef(onSingleTap);
   onSingleTapRef.current = onSingleTap;
 
@@ -74,6 +75,8 @@ function usePinchZoom(
     function onTouchStart(e: TouchEvent) {
       if (e.touches.length === 2) {
         e.preventDefault();
+        e.stopPropagation();
+        wasPinchingRef.current = true;
         const d = dist(e.touches[0], e.touches[1]);
         pinchRef.current = {
           initialDistance: d,
@@ -111,6 +114,7 @@ function usePinchZoom(
       }
       if (e.touches.length === 2 && pinchRef.current) {
         e.preventDefault();
+        e.stopPropagation();
         const d = dist(e.touches[0], e.touches[1]);
         const newScale = Math.max(
           1,
@@ -146,9 +150,13 @@ function usePinchZoom(
 
     function onTouchEnd(e: TouchEvent) {
       if (e.touches.length < 2) {
+        if (pinchRef.current || wasPinchingRef.current) {
+          e.stopPropagation();
+        }
         pinchRef.current = null;
       }
       if (e.touches.length === 0) {
+        wasPinchingRef.current = false;
         panRef.current = null;
         // Snap back to 1 if barely zoomed
         if (stateRef.current.scale < 1.1) {
@@ -426,7 +434,7 @@ function TocThumbnailStrip({
   );
 }
 
-// ── TOC Panel ──
+// ── TOC Panel (Desktop: side panel, Mobile: bottom carousel modal) ──
 function TocPanel({
   tocEntries,
   pages,
@@ -444,16 +452,95 @@ function TocPanel({
   onNavigate: (pageNumber: number) => void;
   isMobile: boolean;
 }) {
+  const activeCardRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (isOpen && activeCardRef.current) {
+      activeCardRef.current.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, [isOpen, currentPage]);
+
   if (!isOpen) return null;
 
-  const panel = (
-    <div
-      className={`flex flex-col bg-gray-900/95 backdrop-blur-sm ${
-        isMobile
-          ? "fixed inset-0 z-[100]"
-          : "absolute right-0 top-0 bottom-0 z-50 w-72 border-l border-white/10"
-      }`}
-    >
+  if (isMobile) {
+    return (
+      <>
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 z-[99] bg-black/40"
+          onClick={onClose}
+        />
+        {/* Bottom carousel modal */}
+        <div className="fixed bottom-0 left-0 right-0 z-[100] rounded-t-2xl bg-gray-900/95 backdrop-blur-sm">
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-sm font-semibold text-white">목차</span>
+            <button
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+          <div
+            className="toc-carousel flex gap-3 overflow-x-auto px-4 pb-6 pt-1"
+            style={{
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "none",
+            }}
+          >
+            <style>{`.toc-carousel::-webkit-scrollbar { display: none }`}</style>
+            {tocEntries.map((entry) => {
+              const page = pages.find((p) => p.pageNumber === entry.pageNumber);
+              if (!page) return null;
+              const isActive = currentPage + 1 === entry.pageNumber;
+              return (
+                <button
+                  key={entry.id}
+                  ref={isActive ? activeCardRef : undefined}
+                  onClick={() => {
+                    onNavigate(entry.pageNumber);
+                    onClose();
+                  }}
+                  className={`flex-shrink-0 overflow-hidden rounded-lg transition-all ${
+                    isActive
+                      ? "ring-2 ring-white shadow-lg shadow-white/10"
+                      : "ring-1 ring-white/15 opacity-70"
+                  }`}
+                  style={{ width: 100 }}
+                >
+                  <div className="relative h-32 w-full bg-neutral-800">
+                    <Image
+                      src={page.imageUrl}
+                      alt={entry.title}
+                      fill
+                      className="object-cover"
+                      sizes="120px"
+                    />
+                  </div>
+                  <div className="px-2 py-1.5 bg-gray-800/80">
+                    <span className="block truncate text-[11px] text-gray-200">
+                      {entry.title}
+                    </span>
+                    <span className="text-[10px] text-gray-500">
+                      p.{entry.pageNumber}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Desktop: side panel
+  return (
+    <div className="absolute right-0 top-0 bottom-0 z-50 flex w-72 flex-col border-l border-white/10 bg-gray-900/95 backdrop-blur-sm">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <span className="text-sm font-semibold text-white">목차</span>
         <button
@@ -470,10 +557,7 @@ function TocPanel({
           return (
             <button
               key={entry.id}
-              onClick={() => {
-                onNavigate(entry.pageNumber);
-                if (isMobile) onClose();
-              }}
+              onClick={() => onNavigate(entry.pageNumber)}
               className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors ${
                 isActive
                   ? "bg-white/15 text-white"
@@ -501,8 +585,6 @@ function TocPanel({
       </div>
     </div>
   );
-
-  return panel;
 }
 
 export function MagazineViewer({
