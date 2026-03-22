@@ -89,6 +89,10 @@ function usePinchZoom(
         panRef.current = null;
         didMoveRef.current = true;
       } else if (e.touches.length === 1) {
+        // After a pinch, block all 1-finger events from reaching react-pageflip
+        if (wasPinchingRef.current) {
+          e.stopPropagation();
+        }
         touchStartPosRef.current = {
           x: e.touches[0].clientX,
           y: e.touches[0].clientY,
@@ -96,6 +100,7 @@ function usePinchZoom(
         didMoveRef.current = false;
         if (stateRef.current.scale > 1.05) {
           e.preventDefault();
+          e.stopPropagation();
           panRef.current = {
             startX: e.touches[0].clientX,
             startY: e.touches[0].clientY,
@@ -107,6 +112,10 @@ function usePinchZoom(
     }
 
     function onTouchMove(e: TouchEvent) {
+      // Block 1-finger moves from reaching react-pageflip after pinch or when zoomed
+      if (e.touches.length === 1 && (wasPinchingRef.current || stateRef.current.scale > 1.05)) {
+        e.stopPropagation();
+      }
       if (e.touches.length === 1 && touchStartPosRef.current && !didMoveRef.current) {
         const dx = Math.abs(e.touches[0].clientX - touchStartPosRef.current.x);
         const dy = Math.abs(e.touches[0].clientY - touchStartPosRef.current.y);
@@ -617,13 +626,9 @@ export function MagazineViewer({
   const [tocOpen, setTocOpen] = useState(false);
   const hasToc = tocEntries.length > 0;
 
-  const handleSingleTap = useCallback(() => {
-    if (hasToc) setTocOpen((v) => !v);
-  }, [hasToc]);
-
   const { scale: zoomScale, translate: zoomTranslate, isZoomed, resetZoom } = usePinchZoom(
     zoomContainerRef,
-    hasToc ? handleSingleTap : undefined,
+    undefined,
     !!ready,
   );
 
@@ -799,7 +804,7 @@ export function MagazineViewer({
       <div className="relative flex flex-1 overflow-hidden">
         <div
           ref={containerRef}
-          className="flex flex-1 items-center justify-center overflow-hidden"
+          className={`flex flex-1 justify-center overflow-hidden ${dims?.isMobile ? "items-start" : "items-center"}`}
         >
         {!ready && <div className="text-gray-500">Loading...</div>}
         {ready && (
@@ -871,7 +876,7 @@ export function MagazineViewer({
         )}
         </div>
 
-        {hasToc && (
+        {hasToc && !dims?.isMobile && (
           <>
             {!tocOpen && (
               <button
@@ -889,7 +894,7 @@ export function MagazineViewer({
               isOpen={tocOpen}
               onClose={() => setTocOpen(false)}
               onNavigate={navigateToPage}
-              isMobile={dims?.isMobile ?? false}
+              isMobile={false}
             />
           </>
         )}
