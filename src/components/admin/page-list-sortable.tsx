@@ -21,9 +21,25 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { reorderPages, deletePage, renamePageFiles } from "@/actions/page-actions";
+import { Input } from "@/components/ui/input";
+import { reorderPages, deletePage, renamePageFiles, renamePageFile } from "@/actions/page-actions";
 import { toast } from "sonner";
 import type { MagazinePage } from "@/types/magazine";
+
+function getFilenameFromUrl(url: string): string {
+  try {
+    const pathname = new URL(url).pathname;
+    const filename = pathname.split("/").pop() || "";
+    return decodeURIComponent(filename);
+  } catch {
+    return "";
+  }
+}
+
+function getFilenameWithoutExt(filename: string): string {
+  const dotIndex = filename.lastIndexOf(".");
+  return dotIndex > 0 ? filename.substring(0, dotIndex) : filename;
+}
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -57,13 +73,21 @@ function useFileSizes(pages: MagazinePage[]) {
 
 function SortablePageItem({
   page,
+  magazineId,
   onDelete,
   fileSize,
 }: {
   page: MagazinePage;
+  magazineId: string;
   onDelete: (id: string) => void;
   fileSize?: number;
 }) {
+  const filename = getFilenameFromUrl(page.imageUrl);
+  const baseName = getFilenameWithoutExt(filename);
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(baseName);
+  const [saving, setSaving] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -78,6 +102,24 @@ function SortablePageItem({
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
+
+  async function handleRename() {
+    const trimmed = editValue.trim();
+    if (!trimmed || trimmed === baseName) {
+      setEditing(false);
+      setEditValue(baseName);
+      return;
+    }
+    setSaving(true);
+    const result = await renamePageFile(page.id, magazineId, trimmed);
+    if ("error" in result && result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("파일명이 변경되었습니다");
+    }
+    setSaving(false);
+    setEditing(false);
+  }
 
   return (
     <div
@@ -99,12 +141,37 @@ function SortablePageItem({
             sizes="(max-width: 768px) 50vw, 200px"
           />
         </div>
-        <p className="mt-1 text-center text-xs text-gray-500">
+      </div>
+      <div className="mt-1 text-center">
+        <p className="text-xs text-gray-500">
           {page.pageNumber}
           {fileSize != null && (
             <span className="ml-1 text-gray-400">({formatFileSize(fileSize)})</span>
           )}
         </p>
+        {editing ? (
+          <div className="mt-0.5 flex gap-1" onClick={(e) => e.stopPropagation()}>
+            <Input
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleRename();
+                if (e.key === "Escape") { setEditing(false); setEditValue(baseName); }
+              }}
+              className="h-6 text-[10px] px-1"
+              autoFocus
+              disabled={saving}
+            />
+          </div>
+        ) : (
+          <p
+            className="mt-0.5 cursor-pointer truncate text-[10px] text-gray-400 hover:text-blue-500"
+            title={`클릭하여 파일명 변경: ${filename}`}
+            onClick={(e) => { e.stopPropagation(); setEditing(true); }}
+          >
+            {filename}
+          </p>
+        )}
       </div>
       <button
         onClick={() => onDelete(page.id)}
@@ -239,6 +306,7 @@ export function PageListSortable({
                 <SortablePageItem
                   key={page.id}
                   page={page}
+                  magazineId={magazineId}
                   onDelete={handleDelete}
                   fileSize={fileSizes[page.id]}
                 />
@@ -264,11 +332,14 @@ export function PageListSortable({
                 sizes="64px"
               />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <span className="text-sm text-gray-600">P.{page.pageNumber}</span>
               {fileSizes[page.id] != null && (
                 <span className="ml-1 text-xs text-gray-400">({formatFileSize(fileSizes[page.id])})</span>
               )}
+              <p className="truncate text-[10px] text-gray-400">
+                {getFilenameFromUrl(page.imageUrl)}
+              </p>
             </div>
             <div className="ml-auto flex gap-1">
               <Button
@@ -308,7 +379,7 @@ export function PageListSortable({
           onClick={handleRenameFiles}
           disabled={renaming}
         >
-          {renaming ? "변경 중..." : "파일명 정리 (page-001)"}
+          {renaming ? "변경 중..." : "파일명 정리 (1, 2, 3...)"}
         </Button>
       </div>
     </>

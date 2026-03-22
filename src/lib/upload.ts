@@ -39,7 +39,7 @@ export async function saveUploadedFile(
   validateImageType(file);
 
   const filename = pageNumber != null
-    ? `page-${String(pageNumber).padStart(3, "0")}.webp`
+    ? `${pageNumber}.webp`
     : generateFilename(file, ".webp");
   const storagePath = `magazines/${magazineId}/pages/${filename}`;
 

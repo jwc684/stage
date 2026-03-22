@@ -120,7 +120,7 @@ export async function renamePageFiles(magazineId: string) {
     if (!oldPath) continue;
 
     const ext = oldPath.split(".").pop() || "webp";
-    const newFilename = `page-${String(page.pageNumber).padStart(3, "0")}.${ext}`;
+    const newFilename = `${page.pageNumber}.${ext}`;
     const newPath = `magazines/${magazineId}/pages/${newFilename}`;
 
     if (oldPath === newPath) continue;
@@ -154,4 +154,46 @@ export async function renamePageFiles(magazineId: string) {
   revalidatePath(`/admin/magazines/${magazineId}/edit`);
   revalidatePath("/");
   return { success: true, renamed };
+}
+
+export async function renamePageFile(
+  pageId: string,
+  magazineId: string,
+  newName: string
+) {
+  const page = await prisma.magazinePage.findUnique({ where: { id: pageId } });
+  if (!page) return { error: "페이지를 찾을 수 없습니다" };
+
+  const oldPath = extractStoragePath(page.imageUrl);
+  if (!oldPath) return { error: "파일 경로를 찾을 수 없습니다" };
+
+  const ext = oldPath.split(".").pop() || "webp";
+  const safeName = newName.replace(/[^a-zA-Z0-9가-힣._-]/g, "_");
+  const newFilename = `${safeName}.${ext}`;
+  const newPath = `magazines/${magazineId}/pages/${newFilename}`;
+
+  if (oldPath === newPath) return { success: true };
+
+  const { error } = await getSupabase().storage
+    .from(STORAGE_BUCKET)
+    .move(oldPath, newPath);
+
+  if (error) return { error: `파일명 변경 실패: ${error.message}` };
+
+  const newUrl = getPublicUrl(newPath);
+  await prisma.magazinePage.update({
+    where: { id: pageId },
+    data: { imageUrl: newUrl },
+  });
+
+  const magazine = await prisma.magazine.findUnique({ where: { id: magazineId } });
+  if (magazine?.coverImageUrl === page.imageUrl) {
+    await prisma.magazine.update({
+      where: { id: magazineId },
+      data: { coverImageUrl: newUrl },
+    });
+  }
+
+  revalidatePath(`/admin/magazines/${magazineId}/edit`);
+  return { success: true };
 }
