@@ -44,15 +44,30 @@ export default async function EditMagazinePage({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
-        <MagazineForm
-          action={action}
-          defaultValues={{
-            issueNumber: magazine.issueNumber,
-            title: magazine.title,
-            publishedAt: magazine.publishedAt,
-          }}
-          formId="magazine-edit-form"
-        />
+        <div className="space-y-6">
+          <MagazineForm
+            action={action}
+            defaultValues={{
+              issueNumber: magazine.issueNumber,
+              title: magazine.title,
+              publishedAt: magazine.publishedAt,
+            }}
+            formId="magazine-edit-form"
+          />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>목차 관리</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TocEditor
+                magazineId={magazine.id}
+                initialEntries={magazine.tocEntries}
+                totalPages={magazine.pages.length}
+              />
+            </CardContent>
+          </Card>
+        </div>
 
         <Card>
           <CardHeader>
@@ -67,19 +82,6 @@ export default async function EditMagazinePage({
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>목차 관리</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TocEditor
-            magazineId={magazine.id}
-            initialEntries={magazine.tocEntries}
-            totalPages={magazine.pages.length}
-          />
-        </CardContent>
-      </Card>
     </div>
   );
 }
