@@ -7,6 +7,7 @@ import { PageUploadZone } from "@/components/admin/page-upload-zone";
 import { PageListSortable } from "@/components/admin/page-list-sortable";
 import { StatusActions } from "@/components/admin/status-actions";
 import { StatusBadge } from "@/components/admin/status-badge";
+import { TocEditor } from "@/components/admin/toc-editor";
 import { updateMagazine } from "@/actions/magazine-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -21,6 +22,7 @@ export default async function EditMagazinePage({
     where: { id },
     include: {
       pages: { orderBy: { sortOrder: "asc" } },
+      tocEntries: { orderBy: { sortOrder: "asc" } },
     },
   });
 
@@ -65,6 +67,19 @@ export default async function EditMagazinePage({
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>목차 관리</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TocEditor
+            magazineId={magazine.id}
+            initialEntries={magazine.tocEntries}
+            totalPages={magazine.pages.length}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

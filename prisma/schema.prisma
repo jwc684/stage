@@ -24,6 +24,7 @@ model Magazine {
   viewCount     Int            @default(0)
   publishedAt   DateTime?
   pages         MagazinePage[]
+  tocEntries    MagazineTocEntry[]
 
   @@index([status, publishedAt(sort: Desc)])
 }
@@ -38,6 +39,18 @@ model MagazinePage {
   magazine   Magazine @relation(fields: [magazineId], references: [id], onDelete: Cascade)
 
   @@unique([magazineId, sortOrder])
+  @@index([magazineId, sortOrder])
+}
+
+model MagazineTocEntry {
+  id         String   @id @default(cuid())
+  magazineId String
+  title      String
+  pageNumber Int
+  sortOrder  Int
+  createdAt  DateTime @default(now())
+  magazine   Magazine @relation(fields: [magazineId], references: [id], onDelete: Cascade)
+
   @@index([magazineId, sortOrder])
 }
 

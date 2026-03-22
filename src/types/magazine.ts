@@ -1,7 +1,8 @@
-import type { Magazine, MagazinePage } from "@/generated/prisma/client";
+import type { Magazine, MagazinePage, MagazineTocEntry } from "@/generated/prisma/client";
 
 export type MagazineWithPages = Magazine & {
   pages: MagazinePage[];
+  tocEntries?: MagazineTocEntry[];
 };
 
 export type MagazineListItem = Magazine & {
@@ -10,4 +11,4 @@ export type MagazineListItem = Magazine & {
 
 export type MagazineStatus = Magazine["status"];
 
-export type { Magazine, MagazinePage };
+export type { Magazine, MagazinePage, MagazineTocEntry };

@@ -9,7 +9,7 @@ import {
   type CSSProperties,
 } from "react";
 import Image from "next/image";
-import type { MagazinePage } from "@/types/magazine";
+import type { MagazinePage, MagazineTocEntry } from "@/types/magazine";
 
 // ── Lazy load react-pageflip ──
 function useFlipBook() {
@@ -178,12 +178,77 @@ function MobilePrevFlipOverlay({
 }
 
 // ── Unified viewer ──
+// ── TOC Panel ──
+function TocPanel({
+  tocEntries,
+  currentPage,
+  isOpen,
+  onClose,
+  onNavigate,
+  isMobile,
+}: {
+  tocEntries: MagazineTocEntry[];
+  currentPage: number;
+  isOpen: boolean;
+  onClose: () => void;
+  onNavigate: (pageNumber: number) => void;
+  isMobile: boolean;
+}) {
+  if (!isOpen) return null;
+
+  const panel = (
+    <div
+      className={`flex flex-col bg-gray-900/95 backdrop-blur-sm ${
+        isMobile
+          ? "fixed inset-0 z-[100]"
+          : "absolute right-0 top-0 bottom-0 z-50 w-64 border-l border-white/10"
+      }`}
+    >
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <span className="text-sm font-semibold text-white">목차</span>
+        <button
+          onClick={onClose}
+          className="flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          ✕
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-2">
+        {tocEntries.map((entry) => {
+          const isActive = currentPage + 1 === entry.pageNumber;
+          return (
+            <button
+              key={entry.id}
+              onClick={() => {
+                onNavigate(entry.pageNumber);
+                if (isMobile) onClose();
+              }}
+              className={`w-full rounded-md px-3 py-2.5 text-left text-sm transition-colors ${
+                isActive
+                  ? "bg-white/15 text-white"
+                  : "text-gray-300 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <span className="block truncate">{entry.title}</span>
+              <span className="text-xs text-gray-500">p.{entry.pageNumber}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  return panel;
+}
+
 export function MagazineViewer({
   pages,
   magazineId,
+  tocEntries = [],
 }: {
   pages: MagazinePage[];
   magazineId?: string;
+  tocEntries?: MagazineTocEntry[];
 }) {
   const HTMLFlipBook = useFlipBook();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -199,6 +264,19 @@ export function MagazineViewer({
   const [currentPage, setCurrentPage] = useState(0);
   const [isPortrait, setIsPortrait] = useState(false);
   const pageRatioRef = useRef(3 / 4);
+
+  const [tocOpen, setTocOpen] = useState(false);
+  const hasToc = tocEntries.length > 0;
+
+  const navigateToPage = useCallback(
+    (pageNumber: number) => {
+      const pf = bookRef.current?.pageFlip();
+      if (pf) {
+        pf.turnToPage(pageNumber - 1);
+      }
+    },
+    []
+  );
 
   // Mobile prev flip overlay state
   const [mobilePrevFlip, setMobilePrevFlip] = useState<{
@@ -354,10 +432,11 @@ export function MagazineViewer({
 
   return (
     <div className="flex h-full flex-col">
-      <div
-        ref={containerRef}
-        className="flex flex-1 items-center justify-center overflow-hidden"
-      >
+      <div className="relative flex flex-1 overflow-hidden">
+        <div
+          ref={containerRef}
+          className="flex flex-1 items-center justify-center overflow-hidden"
+        >
         {!ready && <div className="text-gray-500">Loading...</div>}
         {ready && (
           <div
@@ -411,6 +490,29 @@ export function MagazineViewer({
               />
             )}
           </div>
+        )}
+        </div>
+
+        {hasToc && (
+          <>
+            {!tocOpen && (
+              <button
+                onClick={() => setTocOpen(true)}
+                className="absolute right-3 top-3 z-40 flex h-10 w-10 items-center justify-center rounded-lg bg-black/60 text-lg text-white backdrop-blur-sm transition-colors hover:bg-black/80"
+                title="목차"
+              >
+                ☰
+              </button>
+            )}
+            <TocPanel
+              tocEntries={tocEntries}
+              currentPage={currentPage}
+              isOpen={tocOpen}
+              onClose={() => setTocOpen(false)}
+              onNavigate={navigateToPage}
+              isMobile={dims?.isMobile ?? false}
+            />
+          </>
         )}
       </div>
       <Controls

@@ -30,7 +30,10 @@ export default async function MagazineViewerPage({ params }: Props) {
 
   const magazine = await prisma.magazine.findUnique({
     where: { id },
-    include: { pages: { orderBy: { sortOrder: "asc" } } },
+    include: {
+      pages: { orderBy: { sortOrder: "asc" } },
+      tocEntries: { orderBy: { sortOrder: "asc" } },
+    },
   });
 
   if (!magazine || magazine.status !== "published") {
@@ -52,7 +55,7 @@ export default async function MagazineViewerPage({ params }: Props) {
         </span>
       </header>
       <div className="flex-1 overflow-hidden">
-        <MagazineViewer pages={magazine.pages} />
+        <MagazineViewer pages={magazine.pages} tocEntries={magazine.tocEntries} />
       </div>
       <div className="flex-shrink-0 flex items-center justify-center gap-4 border-t border-white/10 py-3 px-4">
         <Link
