@@ -15,6 +15,7 @@ import type { MagazinePage, MagazineTocEntry } from "@/types/magazine";
 function usePinchZoom(
   containerRef: React.RefObject<HTMLDivElement | null>,
   onSingleTap?: () => void,
+  enabled: boolean = false,
 ) {
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
@@ -62,6 +63,7 @@ function usePinchZoom(
   );
 
   useEffect(() => {
+    if (!enabled) return;
     const el = containerRef.current;
     if (!el) return;
 
@@ -171,16 +173,16 @@ function usePinchZoom(
       }
     }
 
-    el.addEventListener("touchstart", onTouchStart, { passive: false });
-    el.addEventListener("touchmove", onTouchMove, { passive: false });
-    el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchstart", onTouchStart, { passive: false, capture: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
+    el.addEventListener("touchend", onTouchEnd, { capture: true });
 
     return () => {
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
-      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchstart", onTouchStart, { capture: true });
+      el.removeEventListener("touchmove", onTouchMove, { capture: true });
+      el.removeEventListener("touchend", onTouchEnd, { capture: true });
     };
-  }, [containerRef, clampTranslate]);
+  }, [containerRef, clampTranslate, enabled]);
 
   return { scale, translate, isZoomed, resetZoom };
 }
@@ -529,6 +531,7 @@ export function MagazineViewer({
 
   // Pinch-to-zoom (mobile)
   const zoomContainerRef = useRef<HTMLDivElement>(null);
+  const ready = HTMLFlipBook && dims;
   const [tocOpen, setTocOpen] = useState(false);
   const hasToc = tocEntries.length > 0;
 
@@ -539,6 +542,7 @@ export function MagazineViewer({
   const { scale: zoomScale, translate: zoomTranslate, isZoomed, resetZoom } = usePinchZoom(
     zoomContainerRef,
     hasToc ? handleSingleTap : undefined,
+    !!ready,
   );
 
   const navigateToPage = useCallback(
@@ -707,8 +711,6 @@ export function MagazineViewer({
   const canNext = isSingle
     ? currentPage + 1 < total
     : currentPage + 2 < total;
-
-  const ready = HTMLFlipBook && dims;
 
   return (
     <div className="flex h-full flex-col">
