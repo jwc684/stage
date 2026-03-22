@@ -336,7 +336,77 @@ function MobilePrevFlipOverlay({
   );
 }
 
-// ── Unified viewer ──
+// ── TOC Thumbnail Strip ──
+function TocThumbnailStrip({
+  tocEntries,
+  pages,
+  currentPage,
+  onNavigate,
+}: {
+  tocEntries: MagazineTocEntry[];
+  pages: MagazinePage[];
+  currentPage: number;
+  onNavigate: (pageNumber: number) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (activeRef.current) {
+      activeRef.current.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, [currentPage]);
+
+  return (
+    <div
+      ref={scrollRef}
+      className="toc-thumb-strip flex gap-2 overflow-x-auto px-3 py-2"
+      style={{
+        WebkitOverflowScrolling: "touch",
+        scrollbarWidth: "none",
+      }}
+    >
+      <style>{`.toc-thumb-strip::-webkit-scrollbar { display: none }`}</style>
+      {tocEntries.map((entry) => {
+        const page = pages.find((p) => p.pageNumber === entry.pageNumber);
+        if (!page) return null;
+        const isActive = currentPage + 1 === entry.pageNumber;
+        return (
+          <button
+            key={entry.id}
+            ref={isActive ? activeRef : undefined}
+            onClick={() => onNavigate(entry.pageNumber)}
+            className={`flex-shrink-0 flex flex-col items-center gap-1 rounded-md p-1 transition-colors ${
+              isActive ? "bg-white/10" : "hover:bg-white/5"
+            }`}
+          >
+            <div
+              className={`relative h-20 w-16 overflow-hidden rounded ${
+                isActive ? "ring-2 ring-white" : "ring-1 ring-white/20"
+              }`}
+            >
+              <Image
+                src={page.imageUrl}
+                alt={entry.title}
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
+            </div>
+            <span className="max-w-16 truncate text-[10px] text-gray-400">
+              {entry.title}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── TOC Panel ──
 function TocPanel({
   tocEntries,
@@ -693,6 +763,14 @@ export function MagazineViewer({
           </>
         )}
       </div>
+      {hasToc && (
+        <TocThumbnailStrip
+          tocEntries={tocEntries}
+          pages={pages}
+          currentPage={currentPage}
+          onNavigate={navigateToPage}
+        />
+      )}
       <Controls
         onPrev={flipPrev}
         onNext={flipNext}
