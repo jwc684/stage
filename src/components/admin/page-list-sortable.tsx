@@ -272,36 +272,36 @@ export function PageListSortable({
   const [renameProgress, setRenameProgress] = useState({ current: 0, total: 0 });
 
   async function handleRenameFiles() {
+    const total = pages.length * 2; // 2-pass: tmp → final
     setRenaming(true);
-    setRenameProgress({ current: 0, total: pages.length });
+    setRenameProgress({ current: 0, total });
 
-    let renamed = 0;
     let failed = 0;
 
+    // Pass 1: rename all to temporary names to avoid conflicts
     for (let i = 0; i < pages.length; i++) {
-      setRenameProgress({ current: i + 1, total: pages.length });
-      const page = pages[i];
-      const newName = String(page.pageNumber);
-
+      setRenameProgress({ current: i + 1, total });
       try {
-        const result = await renamePageFile(page.id, magazineId, newName);
-        if ("error" in result && result.error) {
-          failed++;
-        } else {
-          renamed++;
-        }
-      } catch {
-        failed++;
-      }
+        const result = await renamePageFile(pages[i].id, magazineId, `_tmp_${i + 1}`);
+        if ("error" in result && result.error) failed++;
+      } catch { failed++; }
     }
 
-    if (renamed > 0) {
-      toast.success(`${renamed}개 파일명이 변경되었습니다`);
-      router.refresh();
+    // Pass 2: rename from temporary to final page numbers
+    for (let i = 0; i < pages.length; i++) {
+      setRenameProgress({ current: pages.length + i + 1, total });
+      try {
+        const result = await renamePageFile(pages[i].id, magazineId, String(i + 1));
+        if ("error" in result && result.error) failed++;
+      } catch { failed++; }
     }
-    if (failed > 0) {
+
+    if (failed === 0) {
+      toast.success(`${pages.length}개 파일명이 변경되었습니다`);
+    } else {
       toast.error(`${failed}개 파일 변경 실패`);
     }
+    router.refresh();
 
     setRenaming(false);
     setRenameProgress({ current: 0, total: 0 });
