@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -53,11 +52,10 @@ export function BlogListTable({ posts }: { posts: BlogPost[] }) {
                 <TableCell>
                   {post.thumbnailUrl ? (
                     <div className="relative h-10 w-14 overflow-hidden rounded">
-                      <Image
+                      <img
                         src={post.thumbnailUrl}
                         alt=""
-                        fill
-                        className="object-cover"
+                        className="absolute inset-0 h-full w-full object-cover"
                         sizes="56px"
                       />
                     </div>
@@ -121,12 +119,10 @@ export function BlogListTable({ posts }: { posts: BlogPost[] }) {
           >
             {post.thumbnailUrl ? (
               <div className="relative h-16 w-20 flex-shrink-0 overflow-hidden rounded">
-                <Image
+                <img
                   src={post.thumbnailUrl}
                   alt=""
-                  fill
-                  className="object-cover"
-                  sizes="80px"
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
               </div>
             ) : (

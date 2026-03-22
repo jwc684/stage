@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -58,12 +57,10 @@ export function MagazineListTable({
                 <TableCell>
                   {mag.coverImageUrl ? (
                     <div className="relative h-12 w-9 overflow-hidden rounded">
-                      <Image
+                      <img
                         src={mag.coverImageUrl}
                         alt=""
-                        fill
-                        className="object-cover"
-                        sizes="36px"
+                        className="absolute inset-0 h-full w-full object-cover"
                       />
                     </div>
                   ) : (
@@ -129,12 +126,10 @@ export function MagazineListTable({
           >
             {mag.coverImageUrl ? (
               <div className="relative h-16 w-12 flex-shrink-0 overflow-hidden rounded">
-                <Image
+                <img
                   src={mag.coverImageUrl}
                   alt=""
-                  fill
-                  className="object-cover"
-                  sizes="48px"
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
               </div>
             ) : (

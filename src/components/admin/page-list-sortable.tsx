@@ -19,7 +19,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import Image from "next/image";
+// Using native img to avoid Vercel Image Optimization limits
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { reorderPages, deletePage, renamePageFiles, renamePageFile } from "@/actions/page-actions";
@@ -136,12 +136,10 @@ function SortablePageItem({
         className="cursor-grab active:cursor-grabbing"
       >
         <div className="relative aspect-[3/4] overflow-hidden rounded">
-          <Image
+          <img
             src={page.imageUrl}
             alt={`Page ${page.pageNumber}`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 50vw, 200px"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         </div>
       </div>
@@ -352,12 +350,10 @@ export function PageListSortable({
             className="flex items-center gap-3 rounded-lg border bg-white p-2"
           >
             <div className="relative h-20 w-16 flex-shrink-0 overflow-hidden rounded">
-              <Image
+              <img
                 src={page.imageUrl}
                 alt={`Page ${page.pageNumber}`}
-                fill
-                className="object-cover"
-                sizes="64px"
+                className="absolute inset-0 h-full w-full object-cover"
               />
             </div>
             <div className="min-w-0 flex-1">
