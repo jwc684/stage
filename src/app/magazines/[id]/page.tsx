@@ -41,7 +41,7 @@ export default async function MagazineViewerPage({ params }: Props) {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-gray-950">
+    <div className="flex h-dvh flex-col bg-gray-950" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
       <ViewTracker type="magazine" id={magazine.id} />
       {/* Header — hidden on mobile for fullscreen */}
       <header className="hidden md:flex h-12 flex-shrink-0 items-center justify-between px-4">
