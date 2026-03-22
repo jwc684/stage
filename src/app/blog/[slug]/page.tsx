@@ -7,6 +7,7 @@ import Link from "next/link";
 import sanitizeHtml from "sanitize-html";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
+import { SiteHeader } from "@/components/public/site-header";
 import { Footer } from "@/components/public/footer";
 import { ViewTracker } from "@/components/public/view-tracker";
 import type { Metadata } from "next";
@@ -54,27 +55,7 @@ export default async function BlogPostPage({
   return (
     <div className="min-h-screen bg-white">
       <ViewTracker type="blog" id={post.id} />
-      <header className="sticky top-0 z-10 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
-          <Link href="/" className="text-lg font-bold tracking-tight">
-            STAGE
-          </Link>
-          <nav className="flex items-center gap-4">
-            <Link
-              href="/magazines"
-              className="text-sm text-gray-500 hover:text-gray-900"
-            >
-              Magazines
-            </Link>
-            <Link
-              href="/blog"
-              className="text-sm text-gray-500 hover:text-gray-900"
-            >
-              Blog
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
 
       {post.thumbnailUrl ? (
         <div className="relative h-64 w-full sm:h-80 md:h-96">
