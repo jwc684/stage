@@ -177,6 +177,8 @@ function usePinchZoom(
         // Tap detection
         const isTap = !didMoveRef.current;
         if (isTap) {
+          // Prevent browser from synthesizing a click event (ghost click)
+          e.preventDefault();
           if (stateRef.current.scale > 1.05) {
             // Zoomed → single tap resets zoom
             stateRef.current = { scale: 1, tx: 0, ty: 0 };
