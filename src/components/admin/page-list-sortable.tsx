@@ -269,17 +269,42 @@ export function PageListSortable({
     reorderPages(magazineId, newPages.map((p) => p.id));
   }
 
+  const [renameProgress, setRenameProgress] = useState({ current: 0, total: 0 });
+
   async function handleRenameFiles() {
     setRenaming(true);
-    try {
-      const result = await renamePageFiles(magazineId);
-      toast.success(`${result.renamed}개 파일명이 변경되었습니다`);
-      router.refresh();
-    } catch {
-      toast.error("파일명 변경에 실패했습니다");
-    } finally {
-      setRenaming(false);
+    setRenameProgress({ current: 0, total: pages.length });
+
+    let renamed = 0;
+    let failed = 0;
+
+    for (let i = 0; i < pages.length; i++) {
+      setRenameProgress({ current: i + 1, total: pages.length });
+      const page = pages[i];
+      const newName = String(page.pageNumber);
+
+      try {
+        const result = await renamePageFile(page.id, magazineId, newName);
+        if ("error" in result && result.error) {
+          failed++;
+        } else {
+          renamed++;
+        }
+      } catch {
+        failed++;
+      }
     }
+
+    if (renamed > 0) {
+      toast.success(`${renamed}개 파일명이 변경되었습니다`);
+      router.refresh();
+    }
+    if (failed > 0) {
+      toast.error(`${failed}개 파일 변경 실패`);
+    }
+
+    setRenaming(false);
+    setRenameProgress({ current: 0, total: 0 });
   }
 
   if (pages.length === 0) {
@@ -379,7 +404,9 @@ export function PageListSortable({
           onClick={handleRenameFiles}
           disabled={renaming}
         >
-          {renaming ? "변경 중..." : "파일명 정리 (1, 2, 3...)"}
+          {renaming
+            ? `변경 중... (${renameProgress.current}/${renameProgress.total})`
+            : "파일명 정리 (1, 2, 3...)"}
         </Button>
       </div>
     </>
