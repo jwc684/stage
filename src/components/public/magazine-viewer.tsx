@@ -549,10 +549,16 @@ export function MagazineViewer({
       const isMobile = cw < 768;
 
       if (isMobile) {
-        const pageW = Math.floor(cw);
-        let pageH = Math.floor(pageW / PAGE_RATIO);
-        if (pageH > ch) {
+        let pageW: number, pageH: number;
+        const hFromWidth = cw / PAGE_RATIO;
+        if (hFromWidth <= ch) {
+          // Width is the constraint
+          pageW = Math.floor(cw);
+          pageH = Math.floor(hFromWidth);
+        } else {
+          // Height is the constraint — fit to full height
           pageH = Math.floor(ch);
+          pageW = Math.floor(ch * PAGE_RATIO);
         }
         setDims({ pageW, pageH, wrapW: pageW, wrapH: pageH, isMobile: true });
       } else {
