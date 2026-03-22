@@ -412,6 +412,7 @@ function TocThumbnailStrip({
 // ── TOC Panel ──
 function TocPanel({
   tocEntries,
+  pages,
   currentPage,
   isOpen,
   onClose,
@@ -419,6 +420,7 @@ function TocPanel({
   isMobile,
 }: {
   tocEntries: MagazineTocEntry[];
+  pages: MagazinePage[];
   currentPage: number;
   isOpen: boolean;
   onClose: () => void;
@@ -432,7 +434,7 @@ function TocPanel({
       className={`flex flex-col bg-gray-900/95 backdrop-blur-sm ${
         isMobile
           ? "fixed inset-0 z-[100]"
-          : "absolute right-0 top-0 bottom-0 z-50 w-64 border-l border-white/10"
+          : "absolute right-0 top-0 bottom-0 z-50 w-72 border-l border-white/10"
       }`}
     >
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -447,6 +449,7 @@ function TocPanel({
       <div className="flex-1 overflow-y-auto p-2">
         {tocEntries.map((entry) => {
           const isActive = currentPage + 1 === entry.pageNumber;
+          const page = pages.find((p) => p.pageNumber === entry.pageNumber);
           return (
             <button
               key={entry.id}
@@ -454,14 +457,27 @@ function TocPanel({
                 onNavigate(entry.pageNumber);
                 if (isMobile) onClose();
               }}
-              className={`w-full rounded-md px-3 py-2.5 text-left text-sm transition-colors ${
+              className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors ${
                 isActive
                   ? "bg-white/15 text-white"
                   : "text-gray-300 hover:bg-white/10 hover:text-white"
               }`}
             >
-              <span className="block truncate">{entry.title}</span>
-              <span className="text-xs text-gray-500">p.{entry.pageNumber}</span>
+              <div className="min-w-0 flex-1">
+                <span className="block truncate">{entry.title}</span>
+                <span className="text-xs text-gray-500">p.{entry.pageNumber}</span>
+              </div>
+              {page && (
+                <div className="relative h-14 w-10 flex-shrink-0 overflow-hidden rounded">
+                  <Image
+                    src={page.imageUrl}
+                    alt={entry.title}
+                    fill
+                    className="object-cover"
+                    sizes="40px"
+                  />
+                </div>
+              )}
             </button>
           );
         })}
@@ -756,6 +772,7 @@ export function MagazineViewer({
             )}
             <TocPanel
               tocEntries={tocEntries}
+              pages={pages}
               currentPage={currentPage}
               isOpen={tocOpen}
               onClose={() => setTocOpen(false)}
