@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { BlogCard } from "@/components/public/blog-card";
+import { SiteHeader } from "@/components/public/site-header";
 import { Footer } from "@/components/public/footer";
 import type { Metadata } from "next";
 
@@ -32,27 +32,7 @@ export default async function BlogPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-10 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
-          <Link href="/" className="text-lg font-bold tracking-tight">
-            STAGE
-          </Link>
-          <nav className="flex items-center gap-4">
-            <Link
-              href="/magazines"
-              className="text-sm text-gray-500 hover:text-gray-900"
-            >
-              Magazines
-            </Link>
-            <Link
-              href="/blog"
-              className="text-sm font-medium text-gray-900"
-            >
-              Blog
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="mx-auto max-w-7xl px-6 py-12">
         <h1 className="text-3xl font-bold tracking-tight">Blog</h1>

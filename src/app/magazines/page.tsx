@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { SiteHeader } from "@/components/public/site-header";
 import { Footer } from "@/components/public/footer";
 import type { Metadata } from "next";
 
@@ -19,20 +20,7 @@ export default async function MagazinesPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
-          <Link href="/" className="text-lg font-bold tracking-tight">
-            STAGE
-          </Link>
-          <Link
-            href="/admin"
-            className="text-sm text-gray-400 hover:text-gray-600"
-          >
-            Admin
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="mx-auto max-w-7xl px-6 py-12">
         <h1 className="text-3xl font-bold tracking-tight">All Issues</h1>
