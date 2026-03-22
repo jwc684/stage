@@ -11,6 +11,165 @@ import {
 import Image from "next/image";
 import type { MagazinePage, MagazineTocEntry } from "@/types/magazine";
 
+// ── Pinch-to-zoom hook (mobile only) ──
+function usePinchZoom(containerRef: React.RefObject<HTMLDivElement | null>) {
+  const [scale, setScale] = useState(1);
+  const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  const stateRef = useRef({ scale: 1, tx: 0, ty: 0 });
+  const pinchRef = useRef<{
+    initialDistance: number;
+    initialScale: number;
+    midX: number;
+    midY: number;
+    lastMidX: number;
+    lastMidY: number;
+  } | null>(null);
+  const panRef = useRef<{
+    startX: number;
+    startY: number;
+    startTx: number;
+    startTy: number;
+  } | null>(null);
+  const lastTapRef = useRef(0);
+
+  const isZoomed = scale > 1.05;
+
+  const resetZoom = useCallback(() => {
+    stateRef.current = { scale: 1, tx: 0, ty: 0 };
+    setScale(1);
+    setTranslate({ x: 0, y: 0 });
+  }, []);
+
+  const clampTranslate = useCallback(
+    (tx: number, ty: number, s: number) => {
+      const el = containerRef.current;
+      if (!el || s <= 1) return { x: 0, y: 0 };
+      const rect = el.getBoundingClientRect();
+      const maxX = (rect.width * (s - 1)) / 2;
+      const maxY = (rect.height * (s - 1)) / 2;
+      return {
+        x: Math.max(-maxX, Math.min(maxX, tx)),
+        y: Math.max(-maxY, Math.min(maxY, ty)),
+      };
+    },
+    [containerRef]
+  );
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    function dist(t1: Touch, t2: Touch) {
+      return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+    }
+
+    function onTouchStart(e: TouchEvent) {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const d = dist(e.touches[0], e.touches[1]);
+        pinchRef.current = {
+          initialDistance: d,
+          initialScale: stateRef.current.scale,
+          midX: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+          midY: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+          lastMidX: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+          lastMidY: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+        };
+        panRef.current = null;
+      } else if (e.touches.length === 1 && stateRef.current.scale > 1.05) {
+        e.preventDefault();
+        panRef.current = {
+          startX: e.touches[0].clientX,
+          startY: e.touches[0].clientY,
+          startTx: stateRef.current.tx,
+          startTy: stateRef.current.ty,
+        };
+      }
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      if (e.touches.length === 2 && pinchRef.current) {
+        e.preventDefault();
+        const d = dist(e.touches[0], e.touches[1]);
+        const newScale = Math.max(
+          1,
+          Math.min(4, pinchRef.current.initialScale * (d / pinchRef.current.initialDistance))
+        );
+        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const dx = midX - pinchRef.current.lastMidX;
+        const dy = midY - pinchRef.current.lastMidY;
+        pinchRef.current.lastMidX = midX;
+        pinchRef.current.lastMidY = midY;
+
+        const newTx = stateRef.current.tx + dx;
+        const newTy = stateRef.current.ty + dy;
+        const clamped = clampTranslate(newTx, newTy, newScale);
+
+        stateRef.current = { scale: newScale, tx: clamped.x, ty: clamped.y };
+        setScale(newScale);
+        setTranslate(clamped);
+      } else if (e.touches.length === 1 && panRef.current && stateRef.current.scale > 1.05) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - panRef.current.startX;
+        const dy = e.touches[0].clientY - panRef.current.startY;
+        const newTx = panRef.current.startTx + dx;
+        const newTy = panRef.current.startTy + dy;
+        const clamped = clampTranslate(newTx, newTy, stateRef.current.scale);
+
+        stateRef.current.tx = clamped.x;
+        stateRef.current.ty = clamped.y;
+        setTranslate(clamped);
+      }
+    }
+
+    function onTouchEnd(e: TouchEvent) {
+      if (e.touches.length < 2) {
+        pinchRef.current = null;
+      }
+      if (e.touches.length === 0) {
+        panRef.current = null;
+        // Snap back to 1 if barely zoomed
+        if (stateRef.current.scale < 1.1) {
+          stateRef.current = { scale: 1, tx: 0, ty: 0 };
+          setScale(1);
+          setTranslate({ x: 0, y: 0 });
+        }
+
+        // Double-tap detection
+        const now = Date.now();
+        if (now - lastTapRef.current < 300) {
+          if (stateRef.current.scale > 1.05) {
+            stateRef.current = { scale: 1, tx: 0, ty: 0 };
+            setScale(1);
+            setTranslate({ x: 0, y: 0 });
+          } else {
+            const newScale = 2;
+            stateRef.current = { scale: newScale, tx: 0, ty: 0 };
+            setScale(newScale);
+            setTranslate({ x: 0, y: 0 });
+          }
+          lastTapRef.current = 0;
+        } else {
+          lastTapRef.current = now;
+        }
+      }
+    }
+
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [containerRef, clampTranslate]);
+
+  return { scale, translate, isZoomed, resetZoom };
+}
+
 // ── Lazy load react-pageflip ──
 function useFlipBook() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -265,6 +424,10 @@ export function MagazineViewer({
   const [isPortrait, setIsPortrait] = useState(false);
   const pageRatioRef = useRef(3 / 4);
 
+  // Pinch-to-zoom (mobile)
+  const zoomContainerRef = useRef<HTMLDivElement>(null);
+  const { scale: zoomScale, translate: zoomTranslate, isZoomed, resetZoom } = usePinchZoom(zoomContainerRef);
+
   const [tocOpen, setTocOpen] = useState(false);
   const hasToc = tocEntries.length > 0;
 
@@ -351,6 +514,7 @@ export function MagazineViewer({
   const onFlip = useCallback(
     (e: { data: number }) => {
       setCurrentPage(e.data);
+      resetZoom();
 
       if (!viewTrackedRef.current && magazineId) {
         const key = `viewed:magazine:${magazineId}`;
@@ -365,7 +529,7 @@ export function MagazineViewer({
         viewTrackedRef.current = true;
       }
     },
-    [magazineId]
+    [magazineId, resetZoom]
   );
 
   const onChangeOrientation = useCallback(
@@ -440,12 +604,25 @@ export function MagazineViewer({
         {!ready && <div className="text-gray-500">Loading...</div>}
         {ready && (
           <div
+            ref={zoomContainerRef}
             style={{
               width: dims.isMobile ? dims.pageW : dims.wrapW,
               height: dims.wrapH,
+              touchAction: dims.isMobile ? "none" : "auto",
             }}
             className="relative flex-shrink-0"
           >
+            <div
+              style={{
+                transform: dims.isMobile && zoomScale > 1
+                  ? `translate(${zoomTranslate.x}px, ${zoomTranslate.y}px) scale(${zoomScale})`
+                  : undefined,
+                transformOrigin: "center center",
+                width: "100%",
+                height: "100%",
+                transition: zoomScale === 1 ? "transform 0.2s ease-out" : undefined,
+              }}
+            >
             <HTMLFlipBook
               ref={bookRef}
               width={dims.pageW}
@@ -466,7 +643,7 @@ export function MagazineViewer({
               mobileScrollSupport={true}
               clickEventForward={false}
               useMouseEvents={true}
-              swipeDistance={dims.isMobile ? 20 : 30}
+              swipeDistance={dims.isMobile && isZoomed ? 9999 : dims.isMobile ? 20 : 30}
               showPageCorners={!dims.isMobile}
               disableFlipByClick={false}
               onFlip={onFlip}
@@ -478,6 +655,7 @@ export function MagazineViewer({
                 <FlipPage key={page.id} page={page} />
               ))}
             </HTMLFlipBook>
+            </div>
 
             {/* Mobile prev: CSS 3D flip overlay */}
             {mobilePrevFlip && dims.isMobile && (
@@ -518,8 +696,8 @@ export function MagazineViewer({
       <Controls
         onPrev={flipPrev}
         onNext={flipNext}
-        canPrev={canPrev && !mobilePrevFlip}
-        canNext={canNext && !mobilePrevFlip}
+        canPrev={canPrev && !mobilePrevFlip && !isZoomed}
+        canNext={canNext && !mobilePrevFlip && !isZoomed}
         label={`${displayPage} / ${total}`}
       />
     </div>
