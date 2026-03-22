@@ -20,14 +20,44 @@ export function HeroSection({ magazine }: { magazine: MagazineWithPages }) {
       id="hero-section"
       className="relative flex h-screen flex-col bg-black"
     >
-      <div className="flex flex-1 items-center">
-        <div className="mx-auto flex w-full max-w-7xl items-center gap-8 px-6 md:gap-16 md:px-12">
-          {/* Left: title + CTA */}
+      {/* ── Mobile: fullscreen cover ── */}
+      <div className="flex flex-1 md:hidden">
+        <Link href={`/magazines/${magazine.id}`} className="relative flex-1">
+          {magazine.coverImageUrl ? (
+            <Image
+              src={magazine.coverImageUrl}
+              alt={magazine.title}
+              fill
+              className="object-cover"
+              sizes="100vw"
+              priority
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gray-900" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+          <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center">
+            <p className="text-xs font-medium uppercase tracking-widest text-gray-300">
+              최신 매거진
+            </p>
+            <h1 className="mt-1 text-2xl font-bold text-white">
+              {magazine.title}
+            </h1>
+            <span className="mt-3 rounded-full border border-white/30 bg-white/10 px-5 py-1.5 text-sm text-white backdrop-blur-sm">
+              매거진 보기 &rarr;
+            </span>
+          </div>
+        </Link>
+      </div>
+
+      {/* ── Desktop: left title + right thumbnail ── */}
+      <div className="hidden flex-1 md:flex items-center">
+        <div className="mx-auto flex w-full max-w-7xl items-center gap-16 px-12">
           <div className="flex-1">
             <p className="text-xs font-medium uppercase tracking-widest text-gray-400">
               최신 매거진
             </p>
-            <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl md:text-5xl">
+            <h1 className="mt-2 text-4xl font-bold text-white md:text-5xl">
               {magazine.title}
             </h1>
             <Link
@@ -38,7 +68,6 @@ export function HeroSection({ magazine }: { magazine: MagazineWithPages }) {
             </Link>
           </div>
 
-          {/* Right: cover thumbnail (no crop, max size) */}
           <Link
             href={`/magazines/${magazine.id}`}
             className="group relative flex-shrink-0"
@@ -50,7 +79,7 @@ export function HeroSection({ magazine }: { magazine: MagazineWithPages }) {
                   alt={magazine.title}
                   fill
                   className="object-contain transition-transform group-hover:scale-105"
-                  sizes="(max-width: 768px) 40vw, 35vw"
+                  sizes="35vw"
                   priority
                 />
               ) : (
