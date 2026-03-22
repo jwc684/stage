@@ -487,15 +487,6 @@ function TocPanel({
         />
         {/* Bottom carousel modal */}
         <div className="fixed bottom-0 left-0 right-0 z-[100] rounded-t-2xl bg-gray-900/95 backdrop-blur-sm">
-          <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-sm font-semibold text-white">목차</span>
-            <button
-              onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
-            >
-              ✕
-            </button>
-          </div>
           <div
             className="toc-carousel flex gap-3 overflow-x-auto px-4 pb-6 pt-1"
             style={{
