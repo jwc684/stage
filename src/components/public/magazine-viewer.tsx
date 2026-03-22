@@ -626,9 +626,13 @@ export function MagazineViewer({
   const [tocOpen, setTocOpen] = useState(false);
   const hasToc = tocEntries.length > 0;
 
+  const handleSingleTap = useCallback(() => {
+    if (hasToc) setTocOpen((v) => !v);
+  }, [hasToc]);
+
   const { scale: zoomScale, translate: zoomTranslate, isZoomed, resetZoom } = usePinchZoom(
     zoomContainerRef,
-    undefined,
+    hasToc ? handleSingleTap : undefined,
     !!ready,
   );
 
@@ -876,9 +880,10 @@ export function MagazineViewer({
         )}
         </div>
 
-        {hasToc && !dims?.isMobile && (
+        {hasToc && (
           <>
-            {!tocOpen && (
+            {/* Desktop: ☰ button */}
+            {!dims?.isMobile && !tocOpen && (
               <button
                 onClick={() => setTocOpen(true)}
                 className="absolute right-3 top-3 z-40 flex h-10 w-10 items-center justify-center rounded-lg bg-black/60 text-lg text-white backdrop-blur-sm transition-colors hover:bg-black/80"
@@ -887,6 +892,7 @@ export function MagazineViewer({
                 ☰
               </button>
             )}
+            {/* Mobile: tap triggers carousel modal; Desktop: side panel */}
             <TocPanel
               tocEntries={tocEntries}
               pages={pages}
@@ -894,7 +900,7 @@ export function MagazineViewer({
               isOpen={tocOpen}
               onClose={() => setTocOpen(false)}
               onNavigate={navigateToPage}
-              isMobile={false}
+              isMobile={dims?.isMobile ?? false}
             />
           </>
         )}
