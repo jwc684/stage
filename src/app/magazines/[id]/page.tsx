@@ -58,7 +58,16 @@ export default async function MagazineViewerPage({ params }: Props) {
       <div className="flex-1 overflow-hidden">
         <MagazineViewer pages={magazine.pages} tocEntries={magazine.tocEntries} />
       </div>
-      {/* Footer — hidden on mobile for fullscreen */}
+      {/* Mobile back link */}
+      <div className="flex md:hidden flex-shrink-0 items-center justify-center py-2">
+        <Link
+          href="/"
+          className="text-xs text-gray-500 transition-colors hover:text-white"
+        >
+          &larr; 이전 페이지로
+        </Link>
+      </div>
+      {/* Footer — hidden on mobile */}
       <div className="hidden md:flex flex-shrink-0 items-center justify-center gap-4 border-t border-white/10 py-3 px-4">
         <Link
           href="/"
