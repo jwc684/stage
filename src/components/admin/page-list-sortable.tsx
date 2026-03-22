@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useId, useCallback } from "react";
+import { useState, useEffect, useId } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -49,24 +49,27 @@ function formatFileSize(bytes: number): string {
 
 function useFileSizes(pages: MagazinePage[]) {
   const [sizes, setSizes] = useState<Record<string, number>>({});
-
-  const fetchSizes = useCallback(async () => {
-    const results: Record<string, number> = {};
-    await Promise.all(
-      pages.map(async (page) => {
-        try {
-          const res = await fetch(page.imageUrl, { method: "HEAD" });
-          const len = res.headers.get("content-length");
-          if (len) results[page.id] = parseInt(len, 10);
-        } catch { /* ignore */ }
-      })
-    );
-    setSizes(results);
-  }, [pages]);
+  const pagesKey = pages.map((p) => p.id).join(",");
 
   useEffect(() => {
+    let cancelled = false;
+    async function fetchSizes() {
+      const results: Record<string, number> = {};
+      await Promise.all(
+        pages.map(async (page) => {
+          try {
+            const res = await fetch(page.imageUrl, { method: "HEAD" });
+            const len = res.headers.get("content-length");
+            if (len) results[page.id] = parseInt(len, 10);
+          } catch { /* ignore */ }
+        })
+      );
+      if (!cancelled) setSizes(results);
+    }
     fetchSizes();
-  }, [fetchSizes]);
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagesKey]);
 
   return sizes;
 }
