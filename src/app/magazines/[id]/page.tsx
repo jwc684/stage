@@ -57,13 +57,19 @@ export default async function MagazineViewerPage({ params }: Props) {
       </header>
       <div className="relative flex-1 overflow-hidden">
         <MagazineViewer pages={magazine.pages} tocEntries={magazine.tocEntries} />
-        {/* Mobile back link — positioned at bottom center */}
-        <div className="absolute bottom-4 left-0 right-0 flex md:hidden items-center justify-center">
+        {/* Mobile back links — positioned at bottom center */}
+        <div className="absolute bottom-4 left-0 right-0 flex md:hidden items-center justify-center gap-3">
           <Link
             href="/"
             className="rounded-full bg-black/50 px-4 py-1.5 text-xs text-gray-300 backdrop-blur-sm transition-colors hover:text-white"
           >
-            &larr; 이전 페이지로
+            &larr; 메인으로
+          </Link>
+          <Link
+            href="/magazines"
+            className="rounded-full bg-black/50 px-4 py-1.5 text-xs text-gray-300 backdrop-blur-sm transition-colors hover:text-white"
+          >
+            매거진 목록
           </Link>
         </div>
       </div>
