@@ -486,9 +486,9 @@ function TocPanel({
           onClick={onClose}
         />
         {/* Bottom carousel modal */}
-        <div className="fixed bottom-0 left-0 right-0 z-[100] rounded-t-2xl bg-gray-900/95 backdrop-blur-sm">
+        <div className="fixed bottom-0 left-0 right-0 z-[100] bg-gray-900/95 backdrop-blur-sm">
           <div
-            className="toc-carousel flex gap-3 overflow-x-auto px-4 pb-6 pt-1"
+            className="toc-carousel flex gap-3 overflow-x-auto px-4 py-3"
             style={{
               WebkitOverflowScrolling: "touch",
               scrollbarWidth: "none",
@@ -526,9 +526,6 @@ function TocPanel({
                   <div className="px-2 py-1.5 bg-gray-800/80">
                     <span className="block truncate text-[11px] text-gray-200">
                       {entry.title}
-                    </span>
-                    <span className="text-[10px] text-gray-500">
-                      p.{entry.pageNumber}
                     </span>
                   </div>
                 </button>
