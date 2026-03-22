@@ -8,7 +8,7 @@ import {
   forwardRef,
   type CSSProperties,
 } from "react";
-import Image from "next/image";
+// Using native <img> to avoid Vercel Image Optimization limits
 import type { MagazinePage, MagazineTocEntry } from "@/types/magazine";
 
 // ── Pinch-to-zoom hook (mobile only) ──
@@ -248,13 +248,10 @@ const FlipPage = forwardRef<
       style={style}
       className="relative h-full w-full overflow-hidden bg-neutral-900"
     >
-      <Image
+      <img
         src={page.imageUrl}
         alt={`Page ${page.pageNumber}`}
-        fill
-        className="object-contain"
-        sizes="(min-width: 768px) 50vw, 100vw"
-        priority={page.pageNumber <= 2}
+        className="absolute inset-0 h-full w-full object-contain"
         draggable={false}
       />
       {!isMobile && (
@@ -348,12 +345,10 @@ function MobilePrevFlipOverlay({
     >
       {/* Current page visible underneath */}
       <div className="absolute inset-0 overflow-hidden bg-neutral-900">
-        <Image
+        <img
           src={currentPage.imageUrl}
           alt={`Page ${currentPage.pageNumber}`}
-          fill
-          className="object-contain"
-          sizes="100vw"
+          className="absolute inset-0 h-full w-full object-contain"
           draggable={false}
         />
       </div>
@@ -368,12 +363,10 @@ function MobilePrevFlipOverlay({
           zIndex: angle < 90 ? 2 : 0,
         }}
       >
-        <Image
+        <img
           src={prevPage.imageUrl}
           alt={`Page ${prevPage.pageNumber}`}
-          fill
-          className="object-contain"
-          sizes="100vw"
+          className="absolute inset-0 h-full w-full object-contain"
           draggable={false}
         />
         <div
@@ -447,12 +440,10 @@ function TocThumbnailStrip({
                 isActive ? "ring-2 ring-white" : "ring-1 ring-white/20"
               }`}
             >
-              <Image
+              <img
                 src={page.imageUrl}
                 alt={entry.title}
-                fill
-                className="object-cover"
-                sizes="80px"
+                className="absolute inset-0 h-full w-full object-cover"
               />
             </div>
             <span className="max-w-16 truncate text-[10px] text-gray-400">
@@ -535,12 +526,10 @@ function TocPanel({
                   style={{ width: 100 }}
                 >
                   <div className="relative h-32 w-full bg-neutral-800">
-                    <Image
+                    <img
                       src={page.imageUrl}
                       alt={entry.title}
-                      fill
-                      className="object-cover"
-                      sizes="120px"
+                      className="absolute inset-0 h-full w-full object-cover"
                     />
                   </div>
                   <div className="px-2 py-1.5 bg-gray-800/80">
@@ -589,12 +578,10 @@ function TocPanel({
               </div>
               {page && (
                 <div className="relative h-14 w-10 flex-shrink-0 overflow-hidden rounded">
-                  <Image
+                  <img
                     src={page.imageUrl}
                     alt={entry.title}
-                    fill
-                    className="object-cover"
-                    sizes="40px"
+                    className="absolute inset-0 h-full w-full object-cover"
                   />
                 </div>
               )}
