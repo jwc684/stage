@@ -27,11 +27,8 @@ export default async function HomePage() {
   if (publishedMagazines.length === 0 && latestPosts.length === 0) {
     return (
       <div className="min-h-screen">
-        <header className="flex h-14 items-center justify-between px-6">
+        <header className="flex h-14 items-center px-6">
           <span className="text-lg font-bold tracking-tight">STAGE</span>
-          <Link href="/admin" className="text-sm text-gray-400 hover:text-gray-600">
-            Admin
-          </Link>
         </header>
         <EmptyState />
       </div>
@@ -44,23 +41,17 @@ export default async function HomePage() {
     <div className="min-h-screen">
       {latest ? (
         <>
-          <header className="absolute left-0 right-0 top-0 z-10 flex h-14 items-center justify-between px-6">
+          <header className="absolute left-0 right-0 top-0 z-10 flex h-14 items-center px-6">
             <span className="text-lg font-bold tracking-tight text-white">
               STAGE
             </span>
-            <Link href="/admin" className="text-sm text-gray-400 hover:text-white">
-              Admin
-            </Link>
           </header>
           <HeroSection magazine={latest} />
           <MagazineCarousel magazines={previous} />
         </>
       ) : (
-        <header className="flex h-14 items-center justify-between px-6">
+        <header className="flex h-14 items-center px-6">
           <span className="text-lg font-bold tracking-tight">STAGE</span>
-          <Link href="/admin" className="text-sm text-gray-400 hover:text-gray-600">
-            Admin
-          </Link>
         </header>
       )}
 
