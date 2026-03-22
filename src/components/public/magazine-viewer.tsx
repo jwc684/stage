@@ -833,7 +833,7 @@ export function MagazineViewer({
               autoSize={false}
               mobileScrollSupport={true}
               clickEventForward={false}
-              useMouseEvents={!dims.isMobile}
+              useMouseEvents={true}
               swipeDistance={dims.isMobile && isZoomed ? 9999 : dims.isMobile ? 20 : 30}
               showPageCorners={!dims.isMobile}
               disableFlipByClick={dims.isMobile}
