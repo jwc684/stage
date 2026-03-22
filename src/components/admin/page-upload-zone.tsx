@@ -34,14 +34,19 @@ export function PageUploadZone({ magazineId }: { magazineId: string }) {
           );
 
           if (!res.ok) {
-            const data = await res.json();
-            toast.error(`${acceptedFiles[i].name}: ${data.error || "업로드 실패"}`);
+            let errorMsg = `HTTP ${res.status}`;
+            try {
+              const data = await res.json();
+              if (data.error) errorMsg = data.error;
+            } catch { /* response is not JSON */ }
+            toast.error(`${acceptedFiles[i].name}: ${errorMsg}`);
             failCount++;
           } else {
             successCount++;
           }
-        } catch {
-          toast.error(`${acceptedFiles[i].name}: 업로드 중 오류 발생`);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "네트워크 오류";
+          toast.error(`${acceptedFiles[i].name}: ${msg}`);
           failCount++;
         }
       }
