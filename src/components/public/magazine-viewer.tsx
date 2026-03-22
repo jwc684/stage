@@ -93,10 +93,8 @@ function usePinchZoom(
         panRef.current = null;
         didMoveRef.current = true;
       } else if (e.touches.length === 1) {
-        // After a pinch, block all 1-finger events from reaching react-pageflip
-        if (wasPinchingRef.current) {
-          e.stopPropagation();
-        }
+        // Block ALL 1-finger events from reaching react-pageflip on mobile
+        e.stopPropagation();
         touchStartPosRef.current = {
           x: e.touches[0].clientX,
           y: e.touches[0].clientY,
@@ -104,7 +102,6 @@ function usePinchZoom(
         didMoveRef.current = false;
         if (stateRef.current.scale > 1.05) {
           e.preventDefault();
-          e.stopPropagation();
           panRef.current = {
             startX: e.touches[0].clientX,
             startY: e.touches[0].clientY,
@@ -116,8 +113,8 @@ function usePinchZoom(
     }
 
     function onTouchMove(e: TouchEvent) {
-      // Block 1-finger moves from reaching react-pageflip after pinch or when zoomed
-      if (e.touches.length === 1 && (wasPinchingRef.current || stateRef.current.scale > 1.05)) {
+      // Block ALL 1-finger moves from reaching react-pageflip
+      if (e.touches.length === 1) {
         e.stopPropagation();
       }
       if (e.touches.length === 1 && touchStartPosRef.current && !didMoveRef.current) {
@@ -163,9 +160,7 @@ function usePinchZoom(
 
     function onTouchEnd(e: TouchEvent) {
       if (e.touches.length < 2) {
-        if (pinchRef.current || wasPinchingRef.current) {
-          e.stopPropagation();
-        }
+        e.stopPropagation();
         pinchRef.current = null;
       }
       if (e.touches.length === 0) {
