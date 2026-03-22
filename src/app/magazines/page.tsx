@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { SiteHeader } from "@/components/public/site-header";
@@ -42,12 +41,10 @@ export default async function MagazinesPage() {
               >
                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-gray-100">
                   {magazine.coverImageUrl ? (
-                    <Image
+                    <img
                       src={magazine.coverImageUrl}
                       alt={magazine.title}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">

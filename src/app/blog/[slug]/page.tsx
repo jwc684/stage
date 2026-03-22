@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import sanitizeHtml from "sanitize-html";
 import { prisma } from "@/lib/prisma";
@@ -59,13 +58,10 @@ export default async function BlogPostPage({
 
       {post.thumbnailUrl ? (
         <div className="relative h-64 w-full sm:h-80 md:h-96">
-          <Image
+          <img
             src={post.thumbnailUrl}
             alt={post.title}
-            fill
-            className="object-cover"
-            sizes="100vw"
-            priority
+            className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
         </div>

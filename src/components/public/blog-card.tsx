@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import type { BlogPost } from "@/types/blog";
@@ -13,12 +12,10 @@ export function BlogCard({ post }: { post: BlogCardPost }) {
     <Link href={`/blog/${post.slug}`} className="group block">
       <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-gray-100">
         {post.thumbnailUrl ? (
-          <Image
+          <img
             src={post.thumbnailUrl}
             alt={post.title}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-800 to-gray-950">

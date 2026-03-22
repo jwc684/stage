@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import type { MagazineWithPages } from "@/types/magazine";
@@ -24,13 +23,10 @@ export function HeroSection({ magazine }: { magazine: MagazineWithPages }) {
       <div className="flex flex-1 md:hidden">
         <Link href={`/magazines/${magazine.id}`} className="relative flex-1">
           {magazine.coverImageUrl ? (
-            <Image
+            <img
               src={magazine.coverImageUrl}
               alt={magazine.title}
-              fill
-              className="object-cover"
-              sizes="100vw"
-              priority
+              className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
             <div className="absolute inset-0 bg-gray-900" />
@@ -84,13 +80,10 @@ export function HeroSection({ magazine }: { magazine: MagazineWithPages }) {
           >
             <div className="relative aspect-[3/4] h-[70vh] overflow-hidden rounded-lg shadow-2xl shadow-white/10">
               {magazine.coverImageUrl ? (
-                <Image
+                <img
                   src={magazine.coverImageUrl}
                   alt={magazine.title}
-                  fill
-                  className="object-contain transition-transform group-hover:scale-105"
-                  sizes="35vw"
-                  priority
+                  className="absolute inset-0 h-full w-full object-contain transition-transform group-hover:scale-105"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gray-800">
