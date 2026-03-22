@@ -33,11 +33,14 @@ function generateFilename(file: File, forceExtension?: string): string {
 
 export async function saveUploadedFile(
   file: File,
-  magazineId: string
+  magazineId: string,
+  pageNumber?: number
 ): Promise<string> {
   validateImageType(file);
 
-  const filename = generateFilename(file, ".webp");
+  const filename = pageNumber != null
+    ? `page-${String(pageNumber).padStart(3, "0")}.webp`
+    : generateFilename(file, ".webp");
   const storagePath = `magazines/${magazineId}/pages/${filename}`;
 
   const rawBuffer = Buffer.from(await file.arrayBuffer());

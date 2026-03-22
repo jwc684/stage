@@ -58,12 +58,13 @@ export async function POST(
     const createdPages = [];
 
     for (const file of files) {
-      const imageUrl = await saveUploadedFile(file, magazineId);
+      const pageNumber = nextSortOrder + 1;
+      const imageUrl = await saveUploadedFile(file, magazineId, pageNumber);
 
       const page = await prisma.magazinePage.create({
         data: {
           magazineId,
-          pageNumber: nextSortOrder + 1,
+          pageNumber,
           imageUrl,
           sortOrder: nextSortOrder,
         },
