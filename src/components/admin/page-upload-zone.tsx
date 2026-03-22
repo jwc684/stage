@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 export function PageUploadZone({ magazineId }: { magazineId: string }) {
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
   const router = useRouter();
 
   const onDrop = useCallback(
@@ -15,28 +16,46 @@ export function PageUploadZone({ magazineId }: { magazineId: string }) {
       if (acceptedFiles.length === 0) return;
 
       setUploading(true);
-      const formData = new FormData();
-      acceptedFiles.forEach((file) => formData.append("files", file));
+      setProgress({ current: 0, total: acceptedFiles.length });
 
-      try {
-        const res = await fetch(
-          `/api/admin/magazines/${magazineId}/pages`,
-          { method: "POST", body: formData }
-        );
+      let successCount = 0;
+      let failCount = 0;
 
-        if (!res.ok) {
-          const data = await res.json();
-          toast.error(data.error || "업로드에 실패했습니다");
-          return;
+      for (let i = 0; i < acceptedFiles.length; i++) {
+        setProgress({ current: i + 1, total: acceptedFiles.length });
+
+        const formData = new FormData();
+        formData.append("files", acceptedFiles[i]);
+
+        try {
+          const res = await fetch(
+            `/api/admin/magazines/${magazineId}/pages`,
+            { method: "POST", body: formData }
+          );
+
+          if (!res.ok) {
+            const data = await res.json();
+            toast.error(`${acceptedFiles[i].name}: ${data.error || "업로드 실패"}`);
+            failCount++;
+          } else {
+            successCount++;
+          }
+        } catch {
+          toast.error(`${acceptedFiles[i].name}: 업로드 중 오류 발생`);
+          failCount++;
         }
-
-        toast.success(`${acceptedFiles.length}개 페이지가 추가되었습니다`);
-        router.refresh();
-      } catch {
-        toast.error("업로드 중 오류가 발생했습니다");
-      } finally {
-        setUploading(false);
       }
+
+      if (successCount > 0) {
+        toast.success(`${successCount}개 페이지가 추가되었습니다`);
+        router.refresh();
+      }
+      if (failCount > 0 && successCount === 0) {
+        toast.error("모든 파일 업로드에 실패했습니다");
+      }
+
+      setUploading(false);
+      setProgress({ current: 0, total: 0 });
     },
     [magazineId, router]
   );
@@ -60,7 +79,9 @@ export function PageUploadZone({ magazineId }: { magazineId: string }) {
     >
       <input {...getInputProps()} />
       {uploading ? (
-        <p className="text-sm text-gray-500">업로드 중...</p>
+        <p className="text-sm text-gray-500">
+          업로드 중... ({progress.current}/{progress.total})
+        </p>
       ) : isDragActive ? (
         <p className="text-sm text-primary">여기에 이미지를 놓으세요</p>
       ) : (
