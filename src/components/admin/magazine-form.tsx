@@ -16,7 +16,7 @@ export function MagazineForm({
   formId,
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
-  defaultValues?: { issueNumber?: number; title?: string; publishedAt?: Date | null };
+  defaultValues?: { issueNumber?: number; title?: string; description?: string | null; publishedAt?: Date | null };
   submitLabel?: string;
   formId?: string;
 }) {
@@ -53,6 +53,15 @@ export function MagazineForm({
               name="title"
               defaultValue={defaultValues?.title}
               required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">설명</Label>
+            <Input
+              id="description"
+              name="description"
+              defaultValue={defaultValues?.description ?? ""}
+              placeholder="매거진 설명 (선택)"
             />
           </div>
           <div className="space-y-2">

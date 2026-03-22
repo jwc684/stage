@@ -17,6 +17,7 @@ model Magazine {
   id            String         @id @default(cuid())
   issueNumber   Int            @unique
   title         String
+  description   String?
   status        MagazineStatus @default(draft)
   coverImageUrl String?
   createdAt     DateTime       @default(now())

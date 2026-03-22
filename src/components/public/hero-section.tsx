@@ -43,6 +43,11 @@ export function HeroSection({ magazine }: { magazine: MagazineWithPages }) {
             <h1 className="mt-1 text-2xl font-bold text-white">
               {magazine.title}
             </h1>
+            {magazine.description && (
+              <p className="mt-2 max-w-xs text-center text-sm text-gray-300">
+                {magazine.description}
+              </p>
+            )}
             <span className="mt-3 rounded-full border border-white/30 bg-white/10 px-5 py-1.5 text-sm text-white backdrop-blur-sm">
               매거진 보기 &rarr;
             </span>
@@ -60,6 +65,11 @@ export function HeroSection({ magazine }: { magazine: MagazineWithPages }) {
             <h1 className="mt-2 text-4xl font-bold text-white md:text-5xl">
               {magazine.title}
             </h1>
+            {magazine.description && (
+              <p className="mt-3 text-base text-gray-300">
+                {magazine.description}
+              </p>
+            )}
             <Link
               href={`/magazines/${magazine.id}`}
               className="mt-6 inline-block rounded-full border border-white/30 bg-white/10 px-6 py-2.5 text-sm text-white backdrop-blur-sm transition-colors hover:bg-white/20"
