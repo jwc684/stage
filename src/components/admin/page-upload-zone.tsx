@@ -69,7 +69,7 @@ export function PageUploadZone({ magazineId }: { magazineId: string }) {
             이미지를 드래그하거나 클릭하여 업로드
           </p>
           <p className="mt-1 text-xs text-gray-400">
-            JPG, PNG, WebP (최대 10MB)
+            JPG, PNG, WebP (최대 20MB, 자동 WebP 변환 및 최적화)
           </p>
         </div>
       )}

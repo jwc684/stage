@@ -1,6 +1,20 @@
 import path from "path";
+import sharp from "sharp";
 import { ACCEPTED_IMAGE_TYPES } from "./constants";
 import { getSupabase, STORAGE_BUCKET, getPublicUrl } from "./supabase";
+
+const OPTIMIZED_MAX_WIDTH = 1200;
+const WEBP_QUALITY = 85;
+
+async function optimizeImage(buffer: Buffer): Promise<Buffer> {
+  return sharp(buffer)
+    .resize(OPTIMIZED_MAX_WIDTH, null, {
+      withoutEnlargement: true,
+      fit: "inside",
+    })
+    .webp({ quality: WEBP_QUALITY })
+    .toBuffer();
+}
 
 function validateImageType(file: File) {
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
@@ -8,10 +22,11 @@ function validateImageType(file: File) {
   }
 }
 
-function generateFilename(file: File): string {
+function generateFilename(file: File, forceExtension?: string): string {
   const timestamp = Date.now();
-  const ext = path.extname(file.name) || ".jpg";
-  const baseName = path.basename(file.name, ext);
+  const originalExt = path.extname(file.name) || ".jpg";
+  const ext = forceExtension || originalExt;
+  const baseName = path.basename(file.name, originalExt);
   const safeName = baseName.replace(/[^a-zA-Z0-9._-]/g, "_");
   return `${timestamp}-${safeName}${ext}`;
 }
@@ -22,14 +37,21 @@ export async function saveUploadedFile(
 ): Promise<string> {
   validateImageType(file);
 
-  const filename = generateFilename(file);
+  const filename = generateFilename(file, ".webp");
   const storagePath = `magazines/${magazineId}/pages/${filename}`;
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const rawBuffer = Buffer.from(await file.arrayBuffer());
+  let optimizedBuffer: Buffer;
+  try {
+    optimizedBuffer = await optimizeImage(rawBuffer);
+  } catch {
+    throw new Error("이미지 최적화에 실패했습니다. 다른 파일을 시도해주세요.");
+  }
+
   const { error } = await getSupabase().storage
     .from(STORAGE_BUCKET)
-    .upload(storagePath, buffer, {
-      contentType: file.type,
+    .upload(storagePath, optimizedBuffer, {
+      contentType: "image/webp",
     });
 
   if (error) throw new Error(`업로드 실패: ${error.message}`);

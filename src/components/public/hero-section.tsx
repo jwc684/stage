@@ -1,12 +1,11 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { MagazineViewer } from "@/components/public/magazine-viewer";
 import type { MagazineWithPages } from "@/types/magazine";
 
 export function HeroSection({ magazine }: { magazine: MagazineWithPages }) {
-  const hasPages = magazine.pages.length > 0;
-
   function scrollToNext() {
     const hero = document.getElementById("hero-section");
     if (!hero) return;
@@ -19,33 +18,46 @@ export function HeroSection({ magazine }: { magazine: MagazineWithPages }) {
   return (
     <section
       id="hero-section"
-      className="relative flex h-screen flex-col bg-black"
+      className="relative flex h-screen flex-col items-center justify-center bg-black"
     >
-      {/* Magazine title overlay */}
-      <div className="flex-shrink-0 px-6 pt-16 pb-2 text-center">
-        <p className="text-xs font-medium uppercase tracking-widest text-gray-400">
-          최신 매거진
-        </p>
-        <h1 className="mt-1 text-lg font-bold text-white">
-          {magazine.title}
-        </h1>
-      </div>
+      {/* Magazine title */}
+      <p className="text-xs font-medium uppercase tracking-widest text-gray-400">
+        최신 매거진
+      </p>
+      <h1 className="mt-1 text-lg font-bold text-white">
+        {magazine.title}
+      </h1>
 
-      {/* Magazine viewer */}
-      <div className="min-h-0 flex-1">
-        {hasPages ? (
-          <MagazineViewer pages={magazine.pages} magazineId={magazine.id} />
-        ) : (
-          <div className="flex h-full items-center justify-center text-gray-500">
-            No pages available
-          </div>
-        )}
-      </div>
+      {/* Cover thumbnail → links to magazine viewer */}
+      <Link
+        href={`/magazines/${magazine.id}`}
+        className="group mt-6"
+      >
+        <div className="relative aspect-[3/4] w-56 overflow-hidden rounded-lg shadow-2xl shadow-white/10 sm:w-64">
+          {magazine.coverImageUrl ? (
+            <Image
+              src={magazine.coverImageUrl}
+              alt={magazine.title}
+              fill
+              className="object-cover transition-transform group-hover:scale-105"
+              sizes="(max-width: 640px) 224px, 256px"
+              priority
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gray-800">
+              <span className="text-gray-500">No Cover</span>
+            </div>
+          )}
+        </div>
+        <p className="mt-3 text-center text-sm text-gray-400 transition-colors group-hover:text-white">
+          매거진 보기 &rarr;
+        </p>
+      </Link>
 
       {/* Scroll down indicator */}
       <button
         onClick={scrollToNext}
-        className="flex-shrink-0 flex flex-col items-center gap-1 pb-4 pt-1 text-gray-400 transition-colors hover:text-white"
+        className="absolute bottom-4 flex flex-col items-center gap-1 text-gray-400 transition-colors hover:text-white"
         aria-label="Scroll to next section"
       >
         <span className="text-[10px] uppercase tracking-widest">Scroll</span>

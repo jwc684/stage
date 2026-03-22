@@ -40,7 +40,7 @@ export async function POST(
     }
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: `파일이 너무 큽니다: ${file.name} (최대 10MB)` },
+        { error: `파일이 너무 큽니다: ${file.name} (최대 20MB)` },
         { status: 400 }
       );
     }
