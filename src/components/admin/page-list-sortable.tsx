@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useId, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   DndContext,
   closestCenter,
@@ -20,7 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { reorderPages, deletePage } from "@/actions/page-actions";
+import { reorderPages, deletePage, renamePageFiles } from "@/actions/page-actions";
 import { toast } from "sonner";
 import type { MagazinePage } from "@/types/magazine";
 
@@ -124,6 +125,8 @@ export function PageListSortable({
   magazineId: string;
 }) {
   const [pages, setPages] = useState(serverPages);
+  const [renaming, setRenaming] = useState(false);
+  const router = useRouter();
   const dndId = useId();
   const fileSizes = useFileSizes(pages);
 
@@ -197,6 +200,19 @@ export function PageListSortable({
     }));
     setPages(newPages);
     reorderPages(magazineId, newPages.map((p) => p.id));
+  }
+
+  async function handleRenameFiles() {
+    setRenaming(true);
+    try {
+      const result = await renamePageFiles(magazineId);
+      toast.success(`${result.renamed}개 파일명이 변경되었습니다`);
+      router.refresh();
+    } catch {
+      toast.error("파일명 변경에 실패했습니다");
+    } finally {
+      setRenaming(false);
+    }
   }
 
   if (pages.length === 0) {
@@ -282,6 +298,18 @@ export function PageListSortable({
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Rename files button */}
+      <div className="flex justify-end pt-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleRenameFiles}
+          disabled={renaming}
+        >
+          {renaming ? "변경 중..." : "파일명 정리 (page-001)"}
+        </Button>
       </div>
     </>
   );
