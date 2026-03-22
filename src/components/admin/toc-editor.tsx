@@ -1,15 +1,101 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useId } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { saveTocEntries } from "@/actions/toc-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { MagazineTocEntry } from "@/types/magazine";
 
 type TocEntry = {
+  id: string;
   title: string;
   pageNumber: number;
 };
+
+let nextId = 0;
+function genId() {
+  return `toc-${++nextId}-${Date.now()}`;
+}
+
+function SortableTocItem({
+  entry,
+  totalPages,
+  onUpdate,
+  onRemove,
+}: {
+  entry: TocEntry;
+  totalPages: number;
+  onUpdate: (id: string, field: "title" | "pageNumber", value: string) => void;
+  onRemove: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: entry.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2">
+      <button
+        type="button"
+        className="cursor-grab touch-none px-1 text-muted-foreground hover:text-foreground"
+        {...attributes}
+        {...listeners}
+      >
+        ⠿
+      </button>
+      <Input
+        value={entry.title}
+        onChange={(e) => onUpdate(entry.id, "title", e.target.value)}
+        placeholder="제목"
+        className="flex-1"
+      />
+      <Input
+        type="number"
+        value={entry.pageNumber}
+        onChange={(e) => onUpdate(entry.id, "pageNumber", e.target.value)}
+        min={1}
+        max={totalPages}
+        className="w-20"
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => onRemove(entry.id)}
+        className="text-destructive hover:text-destructive"
+      >
+        삭제
+      </Button>
+    </div>
+  );
+}
 
 export function TocEditor({
   magazineId,
@@ -21,7 +107,11 @@ export function TocEditor({
   totalPages: number;
 }) {
   const [entries, setEntries] = useState<TocEntry[]>(
-    initialEntries.map((e) => ({ title: e.title, pageNumber: e.pageNumber }))
+    initialEntries.map((e) => ({
+      id: e.id,
+      title: e.title,
+      pageNumber: e.pageNumber,
+    }))
   );
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{
@@ -29,18 +119,37 @@ export function TocEditor({
     text: string;
   } | null>(null);
 
+  const dndId = useId();
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setEntries((prev) => {
+        const oldIndex = prev.findIndex((e) => e.id === active.id);
+        const newIndex = prev.findIndex((e) => e.id === over.id);
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    }
+  }
+
   function addEntry() {
-    setEntries((prev) => [...prev, { title: "", pageNumber: 1 }]);
+    setEntries((prev) => [...prev, { id: genId(), title: "", pageNumber: 1 }]);
   }
 
-  function removeEntry(index: number) {
-    setEntries((prev) => prev.filter((_, i) => i !== index));
+  function removeEntry(id: string) {
+    setEntries((prev) => prev.filter((e) => e.id !== id));
   }
 
-  function updateEntry(index: number, field: keyof TocEntry, value: string) {
+  function updateEntry(id: string, field: "title" | "pageNumber", value: string) {
     setEntries((prev) =>
-      prev.map((entry, i) =>
-        i === index
+      prev.map((entry) =>
+        entry.id === id
           ? {
               ...entry,
               [field]: field === "pageNumber" ? Number(value) || 0 : value,
@@ -52,7 +161,10 @@ export function TocEditor({
 
   function handleSave() {
     startTransition(async () => {
-      const result = await saveTocEntries(magazineId, entries);
+      const result = await saveTocEntries(
+        magazineId,
+        entries.map((e) => ({ title: e.title, pageNumber: e.pageNumber }))
+      );
       if ("error" in result && result.error) {
         setMessage({ type: "error", text: result.error });
       } else {
@@ -70,33 +182,29 @@ export function TocEditor({
         </p>
       )}
 
-      {entries.map((entry, index) => (
-        <div key={index} className="flex items-center gap-2">
-          <Input
-            value={entry.title}
-            onChange={(e) => updateEntry(index, "title", e.target.value)}
-            placeholder="제목"
-            className="flex-1"
-          />
-          <Input
-            type="number"
-            value={entry.pageNumber}
-            onChange={(e) => updateEntry(index, "pageNumber", e.target.value)}
-            min={1}
-            max={totalPages}
-            className="w-20"
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => removeEntry(index)}
-            className="text-destructive hover:text-destructive"
-          >
-            삭제
-          </Button>
-        </div>
-      ))}
+      <DndContext
+        id={dndId}
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={entries.map((e) => e.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-2">
+            {entries.map((entry) => (
+              <SortableTocItem
+                key={entry.id}
+                entry={entry}
+                totalPages={totalPages}
+                onUpdate={updateEntry}
+                onRemove={removeEntry}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       <div className="flex items-center gap-2">
         <Button type="button" variant="outline" size="sm" onClick={addEntry}>
