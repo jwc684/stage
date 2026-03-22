@@ -9,11 +9,17 @@ export function getSupabase(): SupabaseClient {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!url || !key) {
-      throw new Error("Supabase 환경변수가 설정되지 않았습니다");
+    const missing: string[] = [];
+    if (!url) missing.push("NEXT_PUBLIC_SUPABASE_URL");
+    if (!key) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (missing.length > 0) {
+      throw new Error(
+        `Supabase 환경변수가 설정되지 않았습니다: ${missing.join(", ")}`
+      );
     }
 
-    _supabase = createClient(url, key);
+    _supabase = createClient(url!, key!);
   }
   return _supabase;
 }
