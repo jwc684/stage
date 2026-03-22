@@ -12,7 +12,10 @@ import Image from "next/image";
 import type { MagazinePage, MagazineTocEntry } from "@/types/magazine";
 
 // ── Pinch-to-zoom hook (mobile only) ──
-function usePinchZoom(containerRef: React.RefObject<HTMLDivElement | null>) {
+function usePinchZoom(
+  containerRef: React.RefObject<HTMLDivElement | null>,
+  onSingleTap?: () => void,
+) {
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const stateRef = useRef({ scale: 1, tx: 0, ty: 0 });
@@ -30,7 +33,10 @@ function usePinchZoom(containerRef: React.RefObject<HTMLDivElement | null>) {
     startTx: number;
     startTy: number;
   } | null>(null);
-  const lastTapRef = useRef(0);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const didMoveRef = useRef(false);
+  const onSingleTapRef = useRef(onSingleTap);
+  onSingleTapRef.current = onSingleTap;
 
   const isZoomed = scale > 1.05;
 
@@ -76,18 +82,31 @@ function usePinchZoom(containerRef: React.RefObject<HTMLDivElement | null>) {
           lastMidY: (e.touches[0].clientY + e.touches[1].clientY) / 2,
         };
         panRef.current = null;
-      } else if (e.touches.length === 1 && stateRef.current.scale > 1.05) {
-        e.preventDefault();
-        panRef.current = {
-          startX: e.touches[0].clientX,
-          startY: e.touches[0].clientY,
-          startTx: stateRef.current.tx,
-          startTy: stateRef.current.ty,
+        didMoveRef.current = true;
+      } else if (e.touches.length === 1) {
+        touchStartPosRef.current = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
         };
+        didMoveRef.current = false;
+        if (stateRef.current.scale > 1.05) {
+          e.preventDefault();
+          panRef.current = {
+            startX: e.touches[0].clientX,
+            startY: e.touches[0].clientY,
+            startTx: stateRef.current.tx,
+            startTy: stateRef.current.ty,
+          };
+        }
       }
     }
 
     function onTouchMove(e: TouchEvent) {
+      if (e.touches.length === 1 && touchStartPosRef.current && !didMoveRef.current) {
+        const dx = Math.abs(e.touches[0].clientX - touchStartPosRef.current.x);
+        const dy = Math.abs(e.touches[0].clientY - touchStartPosRef.current.y);
+        if (dx > 10 || dy > 10) didMoveRef.current = true;
+      }
       if (e.touches.length === 2 && pinchRef.current) {
         e.preventDefault();
         const d = dist(e.touches[0], e.touches[1]);
@@ -136,22 +155,18 @@ function usePinchZoom(containerRef: React.RefObject<HTMLDivElement | null>) {
           setTranslate({ x: 0, y: 0 });
         }
 
-        // Double-tap detection
-        const now = Date.now();
-        if (now - lastTapRef.current < 300) {
+        // Tap detection
+        const isTap = !didMoveRef.current;
+        if (isTap) {
           if (stateRef.current.scale > 1.05) {
+            // Zoomed → single tap resets zoom
             stateRef.current = { scale: 1, tx: 0, ty: 0 };
             setScale(1);
             setTranslate({ x: 0, y: 0 });
           } else {
-            const newScale = 2;
-            stateRef.current = { scale: newScale, tx: 0, ty: 0 };
-            setScale(newScale);
-            setTranslate({ x: 0, y: 0 });
+            // Not zoomed → single tap callback (e.g. toggle TOC)
+            onSingleTapRef.current?.();
           }
-          lastTapRef.current = 0;
-        } else {
-          lastTapRef.current = now;
         }
       }
     }
@@ -514,10 +529,17 @@ export function MagazineViewer({
 
   // Pinch-to-zoom (mobile)
   const zoomContainerRef = useRef<HTMLDivElement>(null);
-  const { scale: zoomScale, translate: zoomTranslate, isZoomed, resetZoom } = usePinchZoom(zoomContainerRef);
-
   const [tocOpen, setTocOpen] = useState(false);
   const hasToc = tocEntries.length > 0;
+
+  const handleSingleTap = useCallback(() => {
+    if (hasToc) setTocOpen((v) => !v);
+  }, [hasToc]);
+
+  const { scale: zoomScale, translate: zoomTranslate, isZoomed, resetZoom } = usePinchZoom(
+    zoomContainerRef,
+    hasToc ? handleSingleTap : undefined,
+  );
 
   const navigateToPage = useCallback(
     (pageNumber: number) => {

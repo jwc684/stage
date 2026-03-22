@@ -43,7 +43,8 @@ export default async function MagazineViewerPage({ params }: Props) {
   return (
     <div className="flex h-screen flex-col bg-gray-950">
       <ViewTracker type="magazine" id={magazine.id} />
-      <header className="flex h-12 flex-shrink-0 items-center justify-between px-4">
+      {/* Header — hidden on mobile for fullscreen */}
+      <header className="hidden md:flex h-12 flex-shrink-0 items-center justify-between px-4">
         <Link
           href="/"
           className="text-sm font-bold tracking-tight text-white"
@@ -57,7 +58,8 @@ export default async function MagazineViewerPage({ params }: Props) {
       <div className="flex-1 overflow-hidden">
         <MagazineViewer pages={magazine.pages} tocEntries={magazine.tocEntries} />
       </div>
-      <div className="flex-shrink-0 flex items-center justify-center gap-4 border-t border-white/10 py-3 px-4">
+      {/* Footer — hidden on mobile for fullscreen */}
+      <div className="hidden md:flex flex-shrink-0 items-center justify-center gap-4 border-t border-white/10 py-3 px-4">
         <Link
           href="/"
           className="text-sm text-gray-400 transition-colors hover:text-white"
