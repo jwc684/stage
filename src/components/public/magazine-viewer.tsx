@@ -14,7 +14,11 @@ import type { MagazinePage, MagazineTocEntry } from "@/types/magazine";
 // ── Pinch-to-zoom hook (mobile only) ──
 function usePinchZoom(
   containerRef: React.RefObject<HTMLDivElement | null>,
-  onSingleTap?: () => void,
+  callbacks?: {
+    onSingleTap?: () => void;
+    onSwipePrev?: () => void;
+    onSwipeNext?: () => void;
+  },
   enabled: boolean = false,
 ) {
   const [scale, setScale] = useState(1);
@@ -37,8 +41,8 @@ function usePinchZoom(
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
   const didMoveRef = useRef(false);
   const wasPinchingRef = useRef(false);
-  const onSingleTapRef = useRef(onSingleTap);
-  onSingleTapRef.current = onSingleTap;
+  const callbacksRef = useRef(callbacks);
+  callbacksRef.current = callbacks;
 
   const isZoomed = scale > 1.05;
 
@@ -174,7 +178,7 @@ function usePinchZoom(
           setTranslate({ x: 0, y: 0 });
         }
 
-        // Tap detection
+        // Gesture detection: tap or swipe
         const isTap = !didMoveRef.current;
         if (isTap) {
           // Prevent browser from synthesizing a click event (ghost click)
@@ -186,7 +190,23 @@ function usePinchZoom(
             setTranslate({ x: 0, y: 0 });
           } else {
             // Not zoomed → single tap callback (e.g. toggle TOC)
-            onSingleTapRef.current?.();
+            callbacksRef.current?.onSingleTap?.();
+          }
+        } else if (touchStartPosRef.current && stateRef.current.scale <= 1.05) {
+          // Swipe detection (only when not zoomed)
+          const endX = e.changedTouches[0]?.clientX ?? 0;
+          const dx = endX - touchStartPosRef.current.x;
+          const SWIPE_THRESHOLD = 50;
+          if (Math.abs(dx) > SWIPE_THRESHOLD) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (dx > 0) {
+              // Swipe left→right = previous page
+              callbacksRef.current?.onSwipePrev?.();
+            } else {
+              // Swipe right→left = next page
+              callbacksRef.current?.onSwipeNext?.();
+            }
           }
         }
       }
@@ -616,13 +636,16 @@ export function MagazineViewer({
   const [tocOpen, setTocOpen] = useState(false);
   const hasToc = tocEntries.length > 0;
 
-  const handleSingleTap = useCallback(() => {
-    if (hasToc) setTocOpen((v) => !v);
-  }, [hasToc]);
+  const flipPrevRef = useRef<() => void>(undefined);
+  const flipNextRef = useRef<() => void>(undefined);
 
   const { scale: zoomScale, translate: zoomTranslate, isZoomed, resetZoom } = usePinchZoom(
     zoomContainerRef,
-    hasToc ? handleSingleTap : undefined,
+    {
+      onSingleTap: hasToc ? () => setTocOpen((v) => !v) : undefined,
+      onSwipePrev: () => flipPrevRef.current?.(),
+      onSwipeNext: () => flipNextRef.current?.(),
+    },
     !!ready,
   );
 
@@ -755,6 +778,9 @@ export function MagazineViewer({
       pf.flipNext("top");
     }
   }, [currentPage, pages.length]);
+
+  flipPrevRef.current = flipPrev;
+  flipNextRef.current = flipNext;
 
   const handleMobilePrevComplete = useCallback(() => {
     // Animation done — tell react-pageflip to go to prev page (instant, no animation)
