@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useId } from "react";
+import { useState, useEffect, useId, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -24,12 +24,44 @@ import { reorderPages, deletePage } from "@/actions/page-actions";
 import { toast } from "sonner";
 import type { MagazinePage } from "@/types/magazine";
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function useFileSizes(pages: MagazinePage[]) {
+  const [sizes, setSizes] = useState<Record<string, number>>({});
+
+  const fetchSizes = useCallback(async () => {
+    const results: Record<string, number> = {};
+    await Promise.all(
+      pages.map(async (page) => {
+        try {
+          const res = await fetch(page.imageUrl, { method: "HEAD" });
+          const len = res.headers.get("content-length");
+          if (len) results[page.id] = parseInt(len, 10);
+        } catch { /* ignore */ }
+      })
+    );
+    setSizes(results);
+  }, [pages]);
+
+  useEffect(() => {
+    fetchSizes();
+  }, [fetchSizes]);
+
+  return sizes;
+}
+
 function SortablePageItem({
   page,
   onDelete,
+  fileSize,
 }: {
   page: MagazinePage;
   onDelete: (id: string) => void;
+  fileSize?: number;
 }) {
   const {
     attributes,
@@ -68,6 +100,9 @@ function SortablePageItem({
         </div>
         <p className="mt-1 text-center text-xs text-gray-500">
           {page.pageNumber}
+          {fileSize != null && (
+            <span className="ml-1 text-gray-400">({formatFileSize(fileSize)})</span>
+          )}
         </p>
       </div>
       <button
@@ -90,6 +125,7 @@ export function PageListSortable({
 }) {
   const [pages, setPages] = useState(serverPages);
   const dndId = useId();
+  const fileSizes = useFileSizes(pages);
 
   // Sync with server props when they change (e.g. after upload + router.refresh)
   useEffect(() => {
@@ -188,6 +224,7 @@ export function PageListSortable({
                   key={page.id}
                   page={page}
                   onDelete={handleDelete}
+                  fileSize={fileSizes[page.id]}
                 />
               ))}
             </div>
@@ -211,7 +248,12 @@ export function PageListSortable({
                 sizes="64px"
               />
             </div>
-            <span className="text-sm text-gray-600">P.{page.pageNumber}</span>
+            <div>
+              <span className="text-sm text-gray-600">P.{page.pageNumber}</span>
+              {fileSizes[page.id] != null && (
+                <span className="ml-1 text-xs text-gray-400">({formatFileSize(fileSizes[page.id])})</span>
+              )}
+            </div>
             <div className="ml-auto flex gap-1">
               <Button
                 size="sm"
