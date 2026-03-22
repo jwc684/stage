@@ -184,8 +184,8 @@ function useFlipBook() {
 
 const FlipPage = forwardRef<
   HTMLDivElement,
-  { page: MagazinePage; style?: CSSProperties }
->(function FlipPage({ page, style }, ref) {
+  { page: MagazinePage; isMobile?: boolean; style?: CSSProperties }
+>(function FlipPage({ page, isMobile, style }, ref) {
   return (
     <div
       ref={ref}
@@ -201,9 +201,11 @@ const FlipPage = forwardRef<
         priority={page.pageNumber <= 2}
         draggable={false}
       />
-      <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded bg-black/50 px-2 py-0.5 text-xs text-white">
-        {page.pageNumber}
-      </span>
+      {!isMobile && (
+        <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded bg-black/50 px-2 py-0.5 text-xs text-white">
+          {page.pageNumber}
+        </span>
+      )}
     </div>
   );
 });
@@ -722,7 +724,7 @@ export function MagazineViewer({
               style={{}}
             >
               {pages.map((page) => (
-                <FlipPage key={page.id} page={page} />
+                <FlipPage key={page.id} page={page} isMobile={dims.isMobile} />
               ))}
             </HTMLFlipBook>
             </div>
@@ -763,7 +765,7 @@ export function MagazineViewer({
           </>
         )}
       </div>
-      {hasToc && (
+      {!dims?.isMobile && hasToc && (
         <TocThumbnailStrip
           tocEntries={tocEntries}
           pages={pages}
@@ -771,13 +773,15 @@ export function MagazineViewer({
           onNavigate={navigateToPage}
         />
       )}
-      <Controls
-        onPrev={flipPrev}
-        onNext={flipNext}
-        canPrev={canPrev && !mobilePrevFlip && !isZoomed}
-        canNext={canNext && !mobilePrevFlip && !isZoomed}
-        label={`${displayPage} / ${total}`}
-      />
+      {!dims?.isMobile && (
+        <Controls
+          onPrev={flipPrev}
+          onNext={flipNext}
+          canPrev={canPrev && !mobilePrevFlip && !isZoomed}
+          canNext={canNext && !mobilePrevFlip && !isZoomed}
+          label={`${displayPage} / ${total}`}
+        />
+      )}
     </div>
   );
 }
