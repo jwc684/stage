@@ -18,46 +18,45 @@ export function HeroSection({ magazine }: { magazine: MagazineWithPages }) {
   return (
     <section
       id="hero-section"
-      className="relative flex h-screen flex-col items-center justify-center bg-black"
+      className="relative h-screen bg-black"
     >
-      {/* Magazine title */}
-      <p className="text-xs font-medium uppercase tracking-widest text-gray-400">
-        최신 매거진
-      </p>
-      <h1 className="mt-1 text-lg font-bold text-white">
-        {magazine.title}
-      </h1>
+      {/* Full-screen cover image */}
+      {magazine.coverImageUrl ? (
+        <Image
+          src={magazine.coverImageUrl}
+          alt={magazine.title}
+          fill
+          className="object-cover"
+          sizes="100vw"
+          priority
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gray-900" />
+      )}
 
-      {/* Cover thumbnail → links to magazine viewer */}
-      <Link
-        href={`/magazines/${magazine.id}`}
-        className="group mt-6"
-      >
-        <div className="relative aspect-[3/4] w-56 overflow-hidden rounded-lg shadow-2xl shadow-white/10 sm:w-64">
-          {magazine.coverImageUrl ? (
-            <Image
-              src={magazine.coverImageUrl}
-              alt={magazine.title}
-              fill
-              className="object-cover transition-transform group-hover:scale-105"
-              sizes="(max-width: 640px) 224px, 256px"
-              priority
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gray-800">
-              <span className="text-gray-500">No Cover</span>
-            </div>
-          )}
-        </div>
-        <p className="mt-3 text-center text-sm text-gray-400 transition-colors group-hover:text-white">
-          매거진 보기 &rarr;
+      {/* Gradient overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
+
+      {/* Content overlay */}
+      <div className="relative flex h-full flex-col items-center justify-end pb-20">
+        <p className="text-xs font-medium uppercase tracking-widest text-gray-300">
+          최신 매거진
         </p>
-      </Link>
+        <h1 className="mt-1 text-2xl font-bold text-white sm:text-3xl">
+          {magazine.title}
+        </h1>
+        <Link
+          href={`/magazines/${magazine.id}`}
+          className="mt-4 rounded-full border border-white/30 bg-white/10 px-6 py-2 text-sm text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+        >
+          매거진 보기 &rarr;
+        </Link>
+      </div>
 
       {/* Scroll down indicator */}
       <button
         onClick={scrollToNext}
-        className="absolute bottom-4 flex flex-col items-center gap-1 text-gray-400 transition-colors hover:text-white"
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-gray-400 transition-colors hover:text-white"
         aria-label="Scroll to next section"
       >
         <span className="text-[10px] uppercase tracking-widest">Scroll</span>
