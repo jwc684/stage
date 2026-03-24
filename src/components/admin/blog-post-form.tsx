@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect, useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -189,12 +188,10 @@ export function BlogPostForm({
                   <p className="text-sm text-gray-500">업로드 중...</p>
                 ) : thumbnailUrl ? (
                   <div className="relative mx-auto aspect-video w-full max-w-xs overflow-hidden rounded">
-                    <Image
+                    <img
                       src={thumbnailUrl}
                       alt="썸네일 미리보기"
-                      fill
-                      className="object-cover"
-                      sizes="320px"
+                      className="absolute inset-0 h-full w-full object-cover"
                     />
                   </div>
                 ) : (

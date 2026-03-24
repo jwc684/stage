@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 export function PageSpread({
   leftImage,
   rightImage,
@@ -15,13 +13,11 @@ export function PageSpread({
     <div className="flex h-full w-full items-center justify-center gap-0.5">
       {leftImage && (
         <div className="relative h-full flex-1">
-          <Image
+          <img
             src={leftImage}
             alt={`Page ${leftPageNum}`}
-            fill
-            className="object-contain"
-            sizes="50vw"
-            priority={leftPageNum === 1}
+            className="absolute inset-0 h-full w-full object-contain"
+            loading={leftPageNum === 1 ? "eager" : "lazy"}
           />
           {leftPageNum && (
             <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded bg-black/50 px-2 py-0.5 text-xs text-white">
@@ -32,13 +28,11 @@ export function PageSpread({
       )}
       {rightImage && (
         <div className="relative h-full flex-1">
-          <Image
+          <img
             src={rightImage}
             alt={`Page ${rightPageNum}`}
-            fill
-            className="object-contain"
-            sizes="50vw"
-            priority={rightPageNum === 2}
+            className="absolute inset-0 h-full w-full object-contain"
+            loading={rightPageNum === 2 ? "eager" : "lazy"}
           />
           {rightPageNum && (
             <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded bg-black/50 px-2 py-0.5 text-xs text-white">
