@@ -129,4 +129,12 @@
   }
 }
 
+/* Editorial typography utilities */
+.font-headline {
+  font-family: var(--font-headline), serif;
+}
+.font-label {
+  font-family: var(--font-label), sans-serif;
+}
+
 /* react-pageflip: no overrides on internal layout */

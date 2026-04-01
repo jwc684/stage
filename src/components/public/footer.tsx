@@ -14,48 +14,38 @@ export function Footer() {
         </div>
 
         {/* Main content */}
-        <div className="grid gap-10 py-10 md:grid-cols-[1fr_auto]">
+        <div className="grid items-start gap-10 py-10 md:grid-cols-[1fr_auto]">
           {/* Company info */}
-          <div className="space-y-4 text-sm leading-relaxed">
-            <p className="text-gray-300">
-              (우) 06018 서울특별시 강남구 테헤란로 427 위워크타워 10층
-            </p>
-            <div className="grid gap-x-8 gap-y-2 sm:grid-cols-2">
+          <div className="space-y-5 text-sm leading-relaxed">
+            <div className="flex gap-3">
+              <span className="w-28 shrink-0 text-gray-500">주소</span>
+              <span className="text-gray-300">서울특별시 관악구 남부순환로 266길 21 B1</span>
+            </div>
+
+            <div className="grid gap-x-12 gap-y-2.5 sm:grid-cols-2">
               <div className="flex gap-3">
-                <span className="w-[7.5rem] shrink-0 text-gray-500">이메일</span>
-                <span>bonstage.mag@gmail.com</span>
+                <span className="w-28 shrink-0 text-gray-500">이메일</span>
+                <a href="mailto:bonstage.mag@gmail.com" className="transition-colors hover:text-white">bonstage.mag@gmail.com</a>
               </div>
               <div className="flex gap-3">
-                <span className="w-[7.5rem] shrink-0 text-gray-500">Tel.</span>
-                <span>000-0000-0000</span>
+                <span className="w-28 shrink-0 text-gray-500">Tel.</span>
+                <a href="tel:010-5235-8025" className="transition-colors hover:text-white">010-5235-8025</a>
               </div>
               <div className="flex gap-3">
-                <span className="w-[7.5rem] shrink-0 text-gray-500">사업자등록번호</span>
-                <span>548-87-03325</span>
-              </div>
-              <div className="flex gap-3">
-                <span className="w-[7.5rem] shrink-0 text-gray-500">통신판매신고번호</span>
-                <span>제0000-00000-0000호</span>
-              </div>
-              <div className="flex gap-3">
-                <span className="w-[7.5rem] shrink-0 text-gray-500">대표발행인</span>
+                <span className="w-28 shrink-0 text-gray-500">대표발행인</span>
                 <span>박경준</span>
               </div>
               <div className="flex gap-3">
-                <span className="w-[7.5rem] shrink-0 text-gray-500">대표자</span>
-                <span>백민자</span>
+                <span className="w-28 shrink-0 text-gray-500">대표자</span>
+                <span>박경준</span>
               </div>
               <div className="flex gap-3">
-                <span className="w-[7.5rem] shrink-0 text-gray-500">개인정보관리책임자</span>
-                <span>박일남</span>
+                <span className="w-28 shrink-0 text-gray-500">사업자등록번호</span>
+                <span>548-87-03325</span>
               </div>
               <div className="flex gap-3">
-                <span className="w-[7.5rem] shrink-0 text-gray-500">청소년보호책임자</span>
-                <span>OOO</span>
-              </div>
-              <div className="flex gap-3">
-                <span className="w-[7.5rem] shrink-0 text-gray-500">호스팅</span>
-                <span>카이로스</span>
+                <span className="w-28 shrink-0 text-gray-500">개인정보관리책임자</span>
+                <span>최재웅</span>
               </div>
             </div>
           </div>
