@@ -25,7 +25,7 @@ export function Footer() {
             <div className="grid gap-x-12 gap-y-2.5 sm:grid-cols-2">
               <div className="flex gap-3">
                 <span className="w-28 shrink-0 text-gray-500">이메일</span>
-                <a href="mailto:bonstage.mag@gmail.com" className="transition-colors hover:text-white">bonstage.mag@gmail.com</a>
+                <a href="mailto:voceverdiana@naver.com" className="transition-colors hover:text-white">bonstage.mag@gmail.com</a>
               </div>
               <div className="flex gap-3">
                 <span className="w-28 shrink-0 text-gray-500">Tel.</span>
@@ -36,12 +36,16 @@ export function Footer() {
                 <span>박경준</span>
               </div>
               <div className="flex gap-3">
-                <span className="w-28 shrink-0 text-gray-500">대표자</span>
-                <span>박경준</span>
+                <span className="w-28 shrink-0 text-gray-500">발행기획</span>
+                <span>주식회사 아트컴퍼니본</span>
               </div>
               <div className="flex gap-3">
                 <span className="w-28 shrink-0 text-gray-500">사업자등록번호</span>
-                <span>548-87-03325</span>
+                <span>116-81-95607</span>
+              </div>
+              <div className="flex gap-3">
+                <span className="w-28 shrink-0 text-gray-500">AI 기술</span>
+                <span>주식회사 카이로스팀</span>
               </div>
               <div className="flex gap-3">
                 <span className="w-28 shrink-0 text-gray-500">개인정보관리책임자</span>
