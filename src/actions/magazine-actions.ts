@@ -10,6 +10,7 @@ const magazineSchema = z.object({
   title: z.string().min(1, "제목을 입력해주세요").max(200),
   description: z.string().optional().default(""),
   publishedAt: z.string().optional().default(""),
+  contentType: z.enum(["image", "web"]).optional().default("image"),
 });
 
 export async function createMagazine(formData: FormData) {
@@ -18,6 +19,7 @@ export async function createMagazine(formData: FormData) {
     title: formData.get("title"),
     description: formData.get("description"),
     publishedAt: formData.get("publishedAt"),
+    contentType: formData.get("contentType"),
   });
 
   if (!parsed.success) {
@@ -37,6 +39,7 @@ export async function createMagazine(formData: FormData) {
       issueNumber: parsed.data.issueNumber,
       title: parsed.data.title,
       description: parsed.data.description || null,
+      contentType: parsed.data.contentType,
       publishedAt: parsed.data.publishedAt
         ? new Date(parsed.data.publishedAt)
         : null,
@@ -90,15 +93,23 @@ export async function updateMagazine(id: string, formData: FormData) {
 export async function publishMagazine(id: string) {
   const magazine = await prisma.magazine.findUnique({
     where: { id },
-    include: { _count: { select: { pages: true } } },
+    include: {
+      _count: {
+        select: { pages: true, articles: true },
+      },
+    },
   });
 
   if (!magazine) {
     return { error: "매거진을 찾을 수 없습니다" };
   }
 
-  if (magazine._count.pages === 0) {
+  if (magazine.contentType === "image" && magazine._count.pages === 0) {
     return { error: "최소 1장의 페이지가 필요합니다" };
+  }
+
+  if (magazine.contentType === "web" && magazine._count.articles === 0) {
+    return { error: "최소 1개의 아티클이 필요합니다" };
   }
 
   await prisma.magazine.update({

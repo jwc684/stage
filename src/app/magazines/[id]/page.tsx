@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { MagazineViewer } from "@/components/public/magazine-viewer";
+import { MagazineIssuePage } from "@/components/public/magazine-issue-page";
 import { ViewTracker } from "@/components/public/view-tracker";
 import type { Metadata } from "next";
 
@@ -33,6 +34,10 @@ export default async function MagazineViewerPage({ params }: Props) {
     include: {
       pages: { orderBy: { sortOrder: "asc" } },
       tocEntries: { orderBy: { sortOrder: "asc" } },
+      articles: {
+        where: { status: "published" },
+        orderBy: { sortOrder: "asc" },
+      },
     },
   });
 
@@ -40,10 +45,17 @@ export default async function MagazineViewerPage({ params }: Props) {
     notFound();
   }
 
+  // Web-based magazine: show article listing page
+  if (magazine.contentType === "web") {
+    return (
+      <MagazineIssuePage magazine={magazine} articles={magazine.articles} />
+    );
+  }
+
+  // Image-based magazine: show existing viewer
   return (
     <div className="flex h-dvh flex-col bg-gray-950" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
       <ViewTracker type="magazine" id={magazine.id} />
-      {/* Header — hidden on mobile for fullscreen */}
       <header className="hidden md:flex h-12 flex-shrink-0 items-center justify-between px-4">
         <Link
           href="/"
@@ -57,7 +69,6 @@ export default async function MagazineViewerPage({ params }: Props) {
       </header>
       <div className="relative flex-1 overflow-hidden">
         <MagazineViewer pages={magazine.pages} tocEntries={magazine.tocEntries} />
-        {/* Mobile back links — positioned at bottom center */}
         <div className="absolute bottom-4 left-0 right-0 flex md:hidden items-center justify-center gap-3">
           <Link
             href="/"
@@ -73,7 +84,6 @@ export default async function MagazineViewerPage({ params }: Props) {
           </Link>
         </div>
       </div>
-      {/* Footer — hidden on mobile */}
       <div className="hidden md:flex flex-shrink-0 items-center justify-center gap-4 border-t border-white/10 py-3 px-4">
         <Link
           href="/"

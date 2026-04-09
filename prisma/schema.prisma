@@ -13,19 +13,26 @@ enum MagazineStatus {
   unpublished
 }
 
+enum MagazineContentType {
+  image
+  web
+}
+
 model Magazine {
-  id            String         @id @default(cuid())
-  issueNumber   Int            @unique
+  id            String              @id @default(cuid())
+  issueNumber   Int                 @unique
   title         String
   description   String?
-  status        MagazineStatus @default(draft)
+  status        MagazineStatus      @default(draft)
+  contentType   MagazineContentType @default(image)
   coverImageUrl String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  viewCount     Int            @default(0)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  viewCount     Int                 @default(0)
   publishedAt   DateTime?
   pages         MagazinePage[]
   tocEntries    MagazineTocEntry[]
+  articles      MagazineArticle[]
 
   @@index([status, publishedAt(sort: Desc)])
 }
@@ -52,6 +59,27 @@ model MagazineTocEntry {
   createdAt  DateTime @default(now())
   magazine   Magazine @relation(fields: [magazineId], references: [id], onDelete: Cascade)
 
+  @@index([magazineId, sortOrder])
+}
+
+model MagazineArticle {
+  id           String         @id @default(cuid())
+  magazineId   String
+  title        String
+  slug         String
+  content      String         @default("") @db.Text
+  author       String         @default("")
+  section      String         @default("")
+  thumbnailUrl String?
+  sortOrder    Int
+  isCoverStory Boolean        @default(false)
+  status       BlogPostStatus @default(draft)
+  publishedAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  magazine     Magazine       @relation(fields: [magazineId], references: [id], onDelete: Cascade)
+
+  @@unique([magazineId, slug])
   @@index([magazineId, sortOrder])
 }
 
