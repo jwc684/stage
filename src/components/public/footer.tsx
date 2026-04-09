@@ -25,7 +25,7 @@ export function Footer() {
             <div className="grid gap-x-12 gap-y-2.5 sm:grid-cols-2">
               <div className="flex gap-3">
                 <span className="w-28 shrink-0 text-gray-500">이메일</span>
-                <a href="mailto:voceverdiana@naver.com" className="transition-colors hover:text-white">bonstage.mag@gmail.com</a>
+                <a href="mailto:voceverdiana@naver.com" className="transition-colors hover:text-white">voceverdiana@naver.com</a>
               </div>
               <div className="flex gap-3">
                 <span className="w-28 shrink-0 text-gray-500">Tel.</span>
