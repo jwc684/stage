@@ -56,7 +56,7 @@ export default async function HomePage() {
           <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-24 items-start">
             <div className="lg:col-span-8">
               <div className="mb-8">
-                <span className="font-label text-[11px] font-semibold tracking-[0.2em] text-[#6f5c24] uppercase">
+                <span className="font-label text-sm md:text-base font-semibold tracking-[0.15em] text-[#6f5c24] uppercase">
                   최신호 / Issue {String(latestMagazine.issueNumber).padStart(2, "0")}
                   {latestMagazine.publishedAt &&
                     ` / ${new Date(latestMagazine.publishedAt).toLocaleDateString("ko-KR", { year: "numeric", month: "long" })}`}
@@ -103,7 +103,7 @@ export default async function HomePage() {
             <div className="lg:col-span-4 border-l-0 lg:border-l lg:pl-12 border-[#c4c7c7]/20">
               {sidebarPosts.length > 0 && (
                 <div className="mb-12">
-                  <h3 className="font-label text-[10px] font-black tracking-[0.25em] uppercase mb-8 border-b border-[#1c1b1b]/10 pb-4">
+                  <h3 className="font-label text-sm font-black tracking-[0.2em] uppercase mb-8 border-b border-[#1c1b1b]/10 pb-4">
                     최신 글
                   </h3>
                   <div className="space-y-12">
