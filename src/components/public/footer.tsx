@@ -37,7 +37,7 @@ export function Footer() {
               </div>
               <div className="flex gap-3">
                 <span className="w-28 shrink-0 text-gray-500">발행기획</span>
-                <span>주식회사 아트컴퍼니본</span>
+                <span>아트컴퍼니본</span>
               </div>
               <div className="flex gap-3">
                 <span className="w-28 shrink-0 text-gray-500">사업자등록번호</span>
@@ -45,7 +45,7 @@ export function Footer() {
               </div>
               <div className="flex gap-3">
                 <span className="w-28 shrink-0 text-gray-500">AI 기술</span>
-                <span>주식회사 카이로스팀</span>
+                <span>(주) 카이로스</span>
               </div>
               <div className="flex gap-3">
                 <span className="w-28 shrink-0 text-gray-500">개인정보관리책임자</span>
