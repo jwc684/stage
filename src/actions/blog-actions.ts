@@ -98,6 +98,11 @@ export async function updateBlogPost(id: string, formData: FormData) {
     return { error: `슬러그 "${parsed.data.slug}"은(는) 이미 존재합니다` };
   }
 
+  const currentPost = await prisma.blogPost.findUnique({
+    where: { id },
+    select: { content: true, title: true, status: true },
+  });
+
   await prisma.blogPost.update({
     where: { id },
     data: {
@@ -114,9 +119,20 @@ export async function updateBlogPost(id: string, formData: FormData) {
   });
 
   revalidateBlogPaths(id, parsed.data.slug);
-  generateEmbeddings(id).catch((err) =>
-    console.error("[RAG] Embedding generation failed:", err)
-  );
+
+  // Re-embed only if published and content/title changed
+  const contentChanged =
+    currentPost &&
+    currentPost.status === "published" &&
+    (currentPost.content !== (parsed.data.content || "") ||
+      currentPost.title !== parsed.data.title);
+
+  if (contentChanged) {
+    generateEmbeddings(id).catch((err) =>
+      console.error("[RAG] Embedding generation failed:", err)
+    );
+  }
+
   return { success: true };
 }
 
