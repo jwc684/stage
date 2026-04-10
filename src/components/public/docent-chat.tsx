@@ -115,8 +115,8 @@ function ChatBody() {
   }
 
   return (
-    <>
-      <div className="h-80 overflow-y-auto space-y-3">
+    <div className="flex flex-col h-full">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-3">
         {messages.map((msg, i) => (
           <div key={i}>
             <div
@@ -161,7 +161,7 @@ function ChatBody() {
         <div ref={bottomRef} />
       </div>
 
-      <div className="flex gap-2 mt-3">
+      <div className="flex gap-2 mt-3 shrink-0">
         <input
           type="text"
           value={input}
@@ -179,40 +179,22 @@ function ChatBody() {
           전송
         </button>
       </div>
-    </>
+    </div>
   );
 }
 
 /** FAB + 팝업 채팅 (모든 뷰포트) */
 export function DocentChatFAB() {
   const [isOpen, setIsOpen] = useState(false);
-  const [bottomOffset, setBottomOffset] = useState(96); // 24*4 = bottom-24
   const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const vv = window.visualViewport;
-    if (!vv) return;
-
-    function handleResize() {
-      if (!vv) return;
-      // When keyboard opens, visualViewport height shrinks
-      const keyboardHeight = window.innerHeight - vv.height;
-      setBottomOffset(keyboardHeight > 50 ? keyboardHeight + 8 : 96);
-    }
-
-    vv.addEventListener("resize", handleResize);
-    return () => vv.removeEventListener("resize", handleResize);
-  }, [isOpen]);
 
   return (
     <>
-      {/* 팝업 패널 */}
+      {/* 팝업 패널 — 모바일: 전체화면, 데스크탑: 우하단 팝업 */}
       {isOpen && (
         <div
           ref={panelRef}
-          style={{ bottom: `${bottomOffset}px` }}
-          className="fixed right-6 z-50 w-[calc(100vw-3rem)] max-w-md bg-white rounded-2xl shadow-2xl p-6"
+          className="fixed inset-0 z-50 bg-white flex flex-col p-6 lg:inset-auto lg:bottom-24 lg:right-6 lg:w-[calc(100vw-3rem)] lg:max-w-md lg:rounded-2xl lg:shadow-2xl lg:flex-none"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-label text-sm font-black tracking-[0.2em] uppercase">
@@ -237,30 +219,18 @@ export function DocentChatFAB() {
               </svg>
             </button>
           </div>
-          <ChatBody />
+          <div className="flex-1 min-h-0">
+            <ChatBody />
+          </div>
         </div>
       )}
 
-      {/* FAB 버튼 */}
-      <button
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#1c1b1b] text-white flex items-center justify-center shadow-lg hover:bg-[#6f5c24] transition-colors"
-      >
-        {isOpen ? (
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        ) : (
+      {/* FAB 버튼 — 모바일 전체화면일 때 숨김 */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#1c1b1b] text-white flex items-center justify-center shadow-lg hover:bg-[#6f5c24] transition-colors"
+        >
           <svg
             width="24"
             height="24"
@@ -273,8 +243,8 @@ export function DocentChatFAB() {
           >
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
-        )}
-      </button>
+        </button>
+      )}
     </>
   );
 }

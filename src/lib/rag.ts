@@ -29,12 +29,11 @@ export async function generateEmbeddings(
 
   if (!post || !post.content) return;
 
-  if (autoPublish) {
-    await prisma.blogPost.update({
-      where: { id: blogPostId },
-      data: { embeddingStatus: "processing" },
-    });
-  }
+  // Always mark as processing
+  await prisma.blogPost.update({
+    where: { id: blogPostId },
+    data: { embeddingStatus: "processing" },
+  });
 
   try {
     const chunks = chunkBlogContent(post.content, post.title);
