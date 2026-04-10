@@ -187,6 +187,26 @@ function ChatBody() {
 export function DocentChatFAB() {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const [viewHeight, setViewHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    function update() {
+      if (!vv) return;
+      setViewHeight(vv.height);
+    }
+
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [isOpen]);
 
   return (
     <>
@@ -194,7 +214,8 @@ export function DocentChatFAB() {
       {isOpen && (
         <div
           ref={panelRef}
-          className="fixed inset-0 z-50 bg-white flex flex-col p-6 lg:inset-auto lg:bottom-24 lg:right-6 lg:w-[calc(100vw-3rem)] lg:max-w-md lg:rounded-2xl lg:shadow-2xl lg:flex-none"
+          style={viewHeight ? { height: `${viewHeight}px`, top: 0, left: 0, right: 0 } : undefined}
+          className="fixed inset-0 z-50 bg-white flex flex-col p-6 lg:inset-auto lg:bottom-24 lg:right-6 lg:w-[calc(100vw-3rem)] lg:max-w-md lg:h-auto lg:rounded-2xl lg:shadow-2xl lg:flex-none"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-label text-sm font-black tracking-[0.2em] uppercase">
