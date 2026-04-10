@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod/v4";
 import { deleteUploadedFile } from "@/lib/upload";
+import { generateEmbeddings } from "@/lib/rag";
 
 function parseTags(tags: string): string[] {
   return tags.split(",").map((t) => t.trim()).filter(Boolean);
@@ -113,6 +114,9 @@ export async function updateBlogPost(id: string, formData: FormData) {
   });
 
   revalidateBlogPaths(id, parsed.data.slug);
+  generateEmbeddings(id).catch((err) =>
+    console.error("[RAG] Embedding generation failed:", err)
+  );
   return { success: true };
 }
 
@@ -136,6 +140,9 @@ export async function publishBlogPost(id: string) {
   });
 
   revalidateBlogPaths(id, post.slug);
+  generateEmbeddings(id).catch((err) =>
+    console.error("[RAG] Embedding generation failed:", err)
+  );
   return { success: true };
 }
 

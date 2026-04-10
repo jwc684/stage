@@ -22,6 +22,8 @@ Required in `.env` (never committed — in .gitignore):
 - `DATABASE_URL` — PostgreSQL connection string (Supabase Session Pooler)
 - `NEXT_PUBLIC_SUPABASE_URL` — Supabase project URL
 - `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (server-side only)
+- `ANTHROPIC_API_KEY` — Claude API key for 도슨트 AI chatting (server-side only)
+- `VOYAGE_API_KEY` — Voyage AI API key for blog content embedding/RAG (server-side only)
 
 ## Architecture
 

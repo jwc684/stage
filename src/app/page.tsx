@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Footer } from "@/components/public/footer";
 import { PastMagazines } from "@/components/public/past-magazines";
 import Link from "next/link";
+import { DocentChatFAB } from "@/components/public/docent-chat";
 
 export default async function HomePage() {
   const [publishedMagazines, allPosts] = await Promise.all([
@@ -101,7 +102,7 @@ export default async function HomePage() {
 
             {/* Sidebar: Top Stories */}
             <div className="lg:col-span-4 border-l-0 lg:border-l lg:pl-12 border-[#c4c7c7]/20">
-              {sidebarPosts.length > 0 && (
+            {sidebarPosts.length > 0 && (
                 <div className="mb-12">
                   <h3 className="font-label text-sm font-black tracking-[0.2em] uppercase mb-8 border-b border-[#1c1b1b]/10 pb-4">
                     최신 글
@@ -261,6 +262,7 @@ export default async function HomePage() {
         )}
       </main>
 
+      <DocentChatFAB />
       <Footer />
     </div>
   );
