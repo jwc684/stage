@@ -187,16 +187,31 @@ function ChatBody() {
 export function DocentChatFAB() {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-  const [viewHeight, setViewHeight] = useState<number | null>(null);
 
+  // Lock body scroll when chat is open on mobile
+  useEffect(() => {
+    if (!isOpen) return;
+    const orig = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    // Scroll to top to prevent offset issues
+    window.scrollTo(0, 0);
+    return () => {
+      document.body.style.overflow = orig;
+    };
+  }, [isOpen]);
+
+  // Adjust height to visualViewport on mobile (handles keyboard)
   useEffect(() => {
     if (!isOpen) return;
     const vv = window.visualViewport;
-    if (!vv) return;
+    if (!vv || !panelRef.current) return;
 
     function update() {
-      if (!vv) return;
-      setViewHeight(vv.height);
+      if (!vv || !panelRef.current) return;
+      // Only apply on mobile (lg breakpoint = 1024px)
+      if (window.innerWidth >= 1024) return;
+      panelRef.current.style.height = `${vv.height}px`;
+      panelRef.current.style.top = `${vv.offsetTop}px`;
     }
 
     update();
@@ -214,7 +229,6 @@ export function DocentChatFAB() {
       {isOpen && (
         <div
           ref={panelRef}
-          style={viewHeight ? { height: `${viewHeight}px`, top: 0, left: 0, right: 0 } : undefined}
           className="fixed inset-0 z-50 bg-white flex flex-col p-6 lg:inset-auto lg:bottom-24 lg:right-6 lg:w-[calc(100vw-3rem)] lg:max-w-md lg:h-auto lg:rounded-2xl lg:shadow-2xl lg:flex-none"
         >
           <div className="flex items-center justify-between mb-4">
