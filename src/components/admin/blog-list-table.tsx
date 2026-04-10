@@ -16,8 +16,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "./status-badge";
 import type { BlogPost } from "@/types/blog";
+
+function EmbeddingBadge({ status }: { status: string }) {
+  switch (status) {
+    case "processing":
+      return <Badge variant="outline" className="border-yellow-400 text-yellow-600">학습중</Badge>;
+    case "completed":
+      return <Badge variant="outline" className="border-green-400 text-green-600">학습완료</Badge>;
+    case "failed":
+      return <Badge variant="destructive">학습실패</Badge>;
+    default:
+      return null;
+  }
+}
 
 export function BlogListTable({ posts }: { posts: BlogPost[] }) {
   const router = useRouter();
@@ -41,6 +55,7 @@ export function BlogListTable({ posts }: { posts: BlogPost[] }) {
               <TableHead>제목</TableHead>
               <TableHead className="w-24">작성자</TableHead>
               <TableHead className="w-24">상태</TableHead>
+              <TableHead className="w-24">학습</TableHead>
               <TableHead className="w-28">작성일</TableHead>
               <TableHead className="w-20">조회수</TableHead>
               <TableHead className="w-20"></TableHead>
@@ -71,6 +86,9 @@ export function BlogListTable({ posts }: { posts: BlogPost[] }) {
                 </TableCell>
                 <TableCell>
                   <StatusBadge status={post.status} />
+                </TableCell>
+                <TableCell>
+                  <EmbeddingBadge status={post.embeddingStatus} />
                 </TableCell>
                 <TableCell className="text-sm text-gray-500">
                   {post.publishedAt
@@ -134,6 +152,7 @@ export function BlogListTable({ posts }: { posts: BlogPost[] }) {
               <p className="font-medium truncate">{post.title}</p>
               <div className="mt-1 flex items-center gap-2">
                 <StatusBadge status={post.status} />
+                <EmbeddingBadge status={post.embeddingStatus} />
                 {post.author && (
                   <span className="text-xs text-gray-400">{post.author}</span>
                 )}

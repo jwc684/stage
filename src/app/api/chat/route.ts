@@ -1,10 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { searchChunks, buildRagContext, getSourceReferences } from "@/lib/rag";
+import { prisma } from "@/lib/prisma";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+const MODEL = "claude-sonnet-4-20250514";
 
 const SYSTEM_PROMPT = `당신은 STAGE 매거진의 도슨트입니다. STAGE는 한국어 디지털 매거진 및 블로그 플랫폼입니다.
 방문자들이 매거진이나 블로그 콘텐츠에 대해 궁금한 것을 물어보면 친절하고 간결하게 답변해 주세요.
@@ -14,6 +17,7 @@ const SYSTEM_PROMPT = `당신은 STAGE 매거진의 도슨트입니다. STAGE는
 
 export async function POST(req: NextRequest) {
   const { messages } = await req.json();
+  const startTime = Date.now();
 
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
@@ -37,7 +41,7 @@ export async function POST(req: NextRequest) {
   const systemPrompt = `${SYSTEM_PROMPT}${ragContext}`;
 
   const stream = anthropic.messages.stream({
-    model: "claude-sonnet-4-20250514",
+    model: MODEL,
     max_tokens: 500,
     system: systemPrompt,
     messages: messages.map((m: { role: string; content: string }) => ({
@@ -47,6 +51,8 @@ export async function POST(req: NextRequest) {
   });
 
   const encoder = new TextEncoder();
+  let fullResponse = "";
+
   const readableStream = new ReadableStream({
     async start(controller) {
       let closed = false;
@@ -67,23 +73,60 @@ export async function POST(req: NextRequest) {
       }
 
       stream.on("text", (text) => {
+        fullResponse += text;
         if (!closed) {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(text)}\n\n`));
         }
       });
-      stream.on("end", () => {
+      stream.on("end", async () => {
         if (!closed) {
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         }
         safeClose();
+
+        // Log the API call
+        try {
+          const finalMessage = await stream.finalMessage();
+          await prisma.apiCallLog.create({
+            data: {
+              model: MODEL,
+              userMessage: lastUserMsg,
+              response: fullResponse,
+              sourceCount: sources.length,
+              tokensIn: finalMessage.usage?.input_tokens ?? 0,
+              tokensOut: finalMessage.usage?.output_tokens ?? 0,
+              durationMs: Date.now() - startTime,
+              status: "success",
+            },
+          });
+        } catch (err) {
+          console.error("[LOG] Failed to save API call log:", err);
+        }
       });
-      stream.on("error", (err) => {
+      stream.on("error", async (err) => {
         if (!closed) {
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ error: String(err) })}\n\n`)
           );
         }
         safeClose();
+
+        // Log the error
+        try {
+          await prisma.apiCallLog.create({
+            data: {
+              model: MODEL,
+              userMessage: lastUserMsg,
+              response: fullResponse,
+              sourceCount: sources.length,
+              durationMs: Date.now() - startTime,
+              status: "error",
+              error: String(err),
+            },
+          });
+        } catch (logErr) {
+          console.error("[LOG] Failed to save error log:", logErr);
+        }
       });
     },
   });

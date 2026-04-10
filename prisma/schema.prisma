@@ -88,19 +88,43 @@ enum BlogPostStatus {
   published
 }
 
+enum EmbeddingStatus {
+  none
+  processing
+  completed
+  failed
+}
+
 model BlogPost {
-  id           String         @id @default(cuid())
-  title        String
-  slug         String         @unique
-  content      String         @default("") @db.Text
-  thumbnailUrl String?
-  author       String         @default("")
-  tags         String[]
-  viewCount    Int            @default(0)
-  status       BlogPostStatus @default(draft)
-  publishedAt  DateTime?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id              String          @id @default(cuid())
+  title           String
+  slug            String          @unique
+  content         String          @default("") @db.Text
+  thumbnailUrl    String?
+  author          String          @default("")
+  tags            String[]
+  viewCount       Int             @default(0)
+  status          BlogPostStatus  @default(draft)
+  embeddingStatus EmbeddingStatus @default(none)
+  publishedAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   @@index([status, publishedAt(sort: Desc)])
+}
+
+model ApiCallLog {
+  id            String   @id @default(cuid())
+  model         String
+  userMessage   String   @db.Text
+  response      String   @db.Text
+  sourceCount   Int      @default(0)
+  tokensIn      Int      @default(0)
+  tokensOut     Int      @default(0)
+  durationMs    Int      @default(0)
+  status        String   @default("success")
+  error         String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)])
 }

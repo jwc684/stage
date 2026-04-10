@@ -40,6 +40,12 @@ export default function AdminLayout({
               >
                 블로그
               </Link>
+              <Link
+                href="/admin/api-logs"
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                API 로그
+              </Link>
             </nav>
           </div>
           <Link

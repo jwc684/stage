@@ -131,16 +131,8 @@ export async function publishBlogPost(id: string) {
     return { error: "제목과 본문이 필요합니다" };
   }
 
-  await prisma.blogPost.update({
-    where: { id },
-    data: {
-      status: "published",
-      publishedAt: post.publishedAt ?? new Date(),
-    },
-  });
-
   revalidateBlogPaths(id, post.slug);
-  generateEmbeddings(id).catch((err) =>
+  generateEmbeddings(id, { autoPublish: true }).catch((err) =>
     console.error("[RAG] Embedding generation failed:", err)
   );
   return { success: true };

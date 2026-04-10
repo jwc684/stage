@@ -16,46 +16,82 @@ export interface SourceReference {
   slug: string;
 }
 
-export async function generateEmbeddings(blogPostId: string): Promise<void> {
+export async function generateEmbeddings(
+  blogPostId: string,
+  options?: { autoPublish?: boolean }
+): Promise<void> {
+  const autoPublish = options?.autoPublish ?? false;
+
   const post = await prisma.blogPost.findUnique({
     where: { id: blogPostId },
-    select: { id: true, title: true, content: true },
+    select: { id: true, title: true, content: true, publishedAt: true },
   });
 
   if (!post || !post.content) return;
 
-  const chunks = chunkBlogContent(post.content, post.title);
-
-  // Delete existing chunks for this post
-  await prisma.$queryRawUnsafe(
-    `DELETE FROM "BlogPostChunk" WHERE "blogPostId" = $1`,
-    blogPostId
-  );
-
-  if (chunks.length === 0) return;
-
-  // Generate embeddings
-  const embeddings = await embedDocuments(chunks.map((c) => c.content));
-
-  // Insert chunks with embeddings
-  for (let i = 0; i < chunks.length; i++) {
-    const chunk = chunks[i];
-    const vec = `[${embeddings[i].join(",")}]`;
-
-    await prisma.$queryRawUnsafe(
-      `INSERT INTO "BlogPostChunk" ("id", "blogPostId", "chunkIndex", "title", "content", "embedding")
-       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5::vector)`,
-      blogPostId,
-      chunk.chunkIndex,
-      chunk.title,
-      chunk.content,
-      vec
-    );
+  if (autoPublish) {
+    await prisma.blogPost.update({
+      where: { id: blogPostId },
+      data: { embeddingStatus: "processing" },
+    });
   }
 
-  console.log(
-    `[RAG] Generated ${chunks.length} chunks for post "${post.title}"`
-  );
+  try {
+    const chunks = chunkBlogContent(post.content, post.title);
+
+    // Delete existing chunks for this post
+    await prisma.$queryRawUnsafe(
+      `DELETE FROM "BlogPostChunk" WHERE "blogPostId" = $1`,
+      blogPostId
+    );
+
+    if (chunks.length > 0) {
+      // Generate embeddings
+      const embeddings = await embedDocuments(chunks.map((c) => c.content));
+
+      // Insert chunks with embeddings
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const vec = `[${embeddings[i].join(",")}]`;
+
+        await prisma.$queryRawUnsafe(
+          `INSERT INTO "BlogPostChunk" ("id", "blogPostId", "chunkIndex", "title", "content", "embedding")
+           VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5::vector)`,
+          blogPostId,
+          chunk.chunkIndex,
+          chunk.title,
+          chunk.content,
+          vec
+        );
+      }
+    }
+
+    if (autoPublish) {
+      await prisma.blogPost.update({
+        where: { id: blogPostId },
+        data: {
+          embeddingStatus: "completed",
+          status: "published",
+          publishedAt: post.publishedAt ?? new Date(),
+        },
+      });
+    } else {
+      await prisma.blogPost.update({
+        where: { id: blogPostId },
+        data: { embeddingStatus: "completed" },
+      });
+    }
+
+    console.log(
+      `[RAG] Generated ${chunks.length} chunks for post "${post.title}"`
+    );
+  } catch (err) {
+    await prisma.blogPost.update({
+      where: { id: blogPostId },
+      data: { embeddingStatus: "failed" },
+    }).catch(() => {});
+    throw err;
+  }
 }
 
 export async function searchChunks(
