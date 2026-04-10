@@ -169,7 +169,7 @@ function ChatBody() {
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
           placeholder="메시지를 입력하세요"
           disabled={isLoading}
-          className="flex-1 bg-transparent border-b border-[#1c1b1b]/20 py-2 font-label text-xs focus:outline-none focus:border-[#6f5c24] transition-colors disabled:opacity-50"
+          className="flex-1 bg-transparent border-b border-[#1c1b1b]/20 py-2 font-label text-base lg:text-xs focus:outline-none focus:border-[#6f5c24] transition-colors disabled:opacity-50"
         />
         <button
           onClick={handleSend}
