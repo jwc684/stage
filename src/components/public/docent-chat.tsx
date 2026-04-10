@@ -186,12 +186,34 @@ function ChatBody() {
 /** FAB + 팝업 채팅 (모든 뷰포트) */
 export function DocentChatFAB() {
   const [isOpen, setIsOpen] = useState(false);
+  const [bottomOffset, setBottomOffset] = useState(96); // 24*4 = bottom-24
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    function handleResize() {
+      if (!vv) return;
+      // When keyboard opens, visualViewport height shrinks
+      const keyboardHeight = window.innerHeight - vv.height;
+      setBottomOffset(keyboardHeight > 50 ? keyboardHeight + 8 : 96);
+    }
+
+    vv.addEventListener("resize", handleResize);
+    return () => vv.removeEventListener("resize", handleResize);
+  }, [isOpen]);
 
   return (
     <>
       {/* 팝업 패널 */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-[calc(100vw-3rem)] max-w-md bg-white rounded-2xl shadow-2xl p-6">
+        <div
+          ref={panelRef}
+          style={{ bottom: `${bottomOffset}px` }}
+          className="fixed right-6 z-50 w-[calc(100vw-3rem)] max-w-md bg-white rounded-2xl shadow-2xl p-6"
+        >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-label text-sm font-black tracking-[0.2em] uppercase">
               도슨트
