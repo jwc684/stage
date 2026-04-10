@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,7 @@ export function BlogPostForm({
   submitLabel?: string;
   formId?: string;
 }) {
+  const router = useRouter();
   const [state, formAction, isPending] = useActionState(action, undefined);
   const [content, setContent] = useState(defaultValues?.content || "");
   const [thumbnailUrl, setThumbnailUrl] = useState(
@@ -55,8 +57,9 @@ export function BlogPostForm({
   useEffect(() => {
     if (state?.success) {
       toast.success("저장되었습니다");
+      router.push("/admin/blog");
     }
-  }, [state]);
+  }, [state, router]);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -223,9 +226,6 @@ export function BlogPostForm({
             {state?.error && (
               <p className="text-sm text-red-600">{state.error}</p>
             )}
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "저장 중..." : submitLabel}
-            </Button>
           </form>
         </CardContent>
       </Card>
